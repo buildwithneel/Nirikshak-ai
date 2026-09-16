@@ -1,4 +1,5 @@
 import { authStorage } from '../../auth/authApi';
+import { getApiUrl } from './config';
 
 export interface ComplaintItem {
   id: string;
@@ -39,7 +40,7 @@ export const complaintsApi = {
     if (params?.status) query.append('status', params.status);
     if (params?.search) query.append('search', params.search);
 
-    const res = await fetch(`/api/complaints?${query.toString()}`, {
+    const res = await fetch(getApiUrl(`/api/complaints?${query.toString()}`), {
       headers: {
         ...getAuthHeader(),
       },
@@ -52,7 +53,7 @@ export const complaintsApi = {
   },
 
   async getComplaintById(complaintId: string): Promise<ComplaintItem> {
-    const res = await fetch(`/api/complaints/${complaintId}`, {
+    const res = await fetch(getApiUrl(`/api/complaints/${complaintId}`), {
       headers: {
         ...getAuthHeader(),
       },
@@ -66,7 +67,7 @@ export const complaintsApi = {
   },
 
   async submitComplaint(payload: ComplaintCreateInput): Promise<ComplaintItem> {
-    const res = await fetch('/api/complaints', {
+    const res = await fetch(getApiUrl('/api/complaints'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -87,7 +88,7 @@ export const complaintsApi = {
     status: string,
     officerNotes?: string
   ): Promise<ComplaintItem> {
-    const res = await fetch(`/api/complaints/${complaintId}/status`, {
+    const res = await fetch(getApiUrl(`/api/complaints/${complaintId}/status`), {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -107,7 +108,7 @@ export const complaintsApi = {
   },
 
   async initiateInspection(complaintId: string): Promise<{ id: string; inspection_reference: string }> {
-    const res = await fetch(`/api/complaints/${complaintId}/initiate-inspection`, {
+    const res = await fetch(getApiUrl(`/api/complaints/${complaintId}/initiate-inspection`), {
       method: 'POST',
       headers: {
         ...getAuthHeader(),

@@ -1,3 +1,5 @@
+import { getApiUrl } from './api/config';
+
 export interface OCRBoundingBox {
   x: number;
   y: number;
@@ -67,7 +69,7 @@ export async function runRealOCR(imageSource: File | Blob | string): Promise<OCR
   }
 
   try {
-    const response = await fetch('/api/ocr', {
+    const response = await fetch(getApiUrl('/api/ocr'), {
       method: 'POST',
       body: formData,
     });

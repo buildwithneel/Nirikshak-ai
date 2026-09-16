@@ -7,6 +7,7 @@ import {
   ComplaintCreatePayload,
   ComplaintStatus,
 } from './authTypes';
+import { getApiUrl } from '../services/api/config';
 
 const TOKEN_KEY = 'nirikshak_auth_token';
 const USER_KEY = 'nirikshak_auth_user';
@@ -18,6 +19,12 @@ export const authStorage = {
     } catch {
       return null;
     }
+  },
+
+  setToken: (token: string): void => {
+    try {
+      localStorage.setItem(TOKEN_KEY, token);
+    } catch {}
   },
 
   getUser: (): User | null => {
@@ -125,7 +132,7 @@ const DEMO_COMPLAINTS: Complaint[] = [
 export const authApi = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch(getApiUrl('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),
@@ -185,7 +192,7 @@ export const authApi = {
     const token = authStorage.getToken();
     if (token) {
       try {
-        await fetch('/api/auth/logout', {
+        await fetch(getApiUrl('/api/auth/logout'), {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -201,7 +208,7 @@ export const authApi = {
     if (!token) return null;
 
     try {
-      const res = await fetch('/api/auth/me', {
+      const res = await fetch(getApiUrl('/api/auth/me'), {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
@@ -218,7 +225,7 @@ export const authApi = {
   async getComplaints(): Promise<Complaint[]> {
     const token = authStorage.getToken();
     try {
-      const res = await fetch('/api/complaints', {
+      const res = await fetch(getApiUrl('/api/complaints'), {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (res.ok) {
@@ -241,7 +248,7 @@ export const authApi = {
     const user = authStorage.getUser();
 
     try {
-      const res = await fetch('/api/complaints', {
+      const res = await fetch(getApiUrl('/api/complaints'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -285,7 +292,7 @@ export const authApi = {
   ): Promise<Complaint | null> {
     const token = authStorage.getToken();
     try {
-      const res = await fetch(`/api/complaints/${id}/status`, {
+      const res = await fetch(getApiUrl(`/api/complaints/${id}/status`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

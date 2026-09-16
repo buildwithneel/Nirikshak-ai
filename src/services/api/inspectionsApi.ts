@@ -1,4 +1,5 @@
 import { authStorage } from '../../auth/authApi';
+import { getApiUrl } from './config';
 
 export interface InspectionSummary {
   id: string;
@@ -81,7 +82,7 @@ export const inspectionsApi = {
     if (params?.status) query.append('status', params.status);
     if (params?.search) query.append('search', params.search);
 
-    const res = await fetch(`/api/inspections?${query.toString()}`, {
+    const res = await fetch(getApiUrl(`/api/inspections?${query.toString()}`), {
       headers: {
         ...getAuthHeader(),
       },
@@ -94,7 +95,7 @@ export const inspectionsApi = {
   },
 
   async getInspectionById(inspectionId: string): Promise<InspectionDetail> {
-    const res = await fetch(`/api/inspections/${inspectionId}`, {
+    const res = await fetch(getApiUrl(`/api/inspections/${inspectionId}`), {
       headers: {
         ...getAuthHeader(),
       },
@@ -115,7 +116,7 @@ export const inspectionsApi = {
     complaint_id?: string;
     complaint_reference?: string;
   }): Promise<InspectionSummary> {
-    const res = await fetch('/api/inspections', {
+    const res = await fetch(getApiUrl('/api/inspections'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -142,7 +143,7 @@ export const inspectionsApi = {
       retail_point?: string;
     }
   ): Promise<InspectionSummary> {
-    const res = await fetch(`/api/inspections/${inspectionId}`, {
+    const res = await fetch(getApiUrl(`/api/inspections/${inspectionId}`), {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -170,7 +171,7 @@ export const inspectionsApi = {
       ocr_processing_time_ms?: number;
     }
   ): Promise<any> {
-    const res = await fetch(`/api/inspections/${inspectionId}/analysis`, {
+    const res = await fetch(getApiUrl(`/api/inspections/${inspectionId}/analysis`), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -190,7 +191,7 @@ export const inspectionsApi = {
     inspectionId: string,
     payload: { category: string; observation: string }
   ): Promise<any> {
-    const res = await fetch(`/api/inspections/${inspectionId}/observations`, {
+    const res = await fetch(getApiUrl(`/api/inspections/${inspectionId}/observations`), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -217,7 +218,7 @@ export const inspectionsApi = {
       officer_justification: string;
     }
   ): Promise<any> {
-    const res = await fetch(`/api/inspections/${inspectionId}/verify`, {
+    const res = await fetch(getApiUrl(`/api/inspections/${inspectionId}/verify`), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -234,7 +235,7 @@ export const inspectionsApi = {
   },
 
   async getAuditTimeline(inspectionId: string): Promise<AuditEventItem[]> {
-    const res = await fetch(`/api/inspections/${inspectionId}/audit`, {
+    const res = await fetch(getApiUrl(`/api/inspections/${inspectionId}/audit`), {
       headers: {
         ...getAuthHeader(),
       },
@@ -247,7 +248,7 @@ export const inspectionsApi = {
   },
 
   async generateReport(inspectionId: string): Promise<Blob> {
-    const res = await fetch(`/api/inspections/${inspectionId}/generate-report`, {
+    const res = await fetch(getApiUrl(`/api/inspections/${inspectionId}/generate-report`), {
       method: 'POST',
       headers: {
         ...getAuthHeader(),

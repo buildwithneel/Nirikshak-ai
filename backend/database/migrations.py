@@ -1,7 +1,8 @@
+import os
 import logging
 from datetime import datetime, timezone
 from sqlalchemy import text
-from .connection import engine, Base, SessionLocal
+from .connection import engine, Base, SessionLocal, is_postgres
 from .models import (
     UserDB,
     ComplaintDB,
@@ -14,24 +15,25 @@ from auth.security import hash_password, normalize_email
 
 logger = logging.getLogger("nirikshak-migrations")
 
-SCHEMA_VERSION = 4  # Prompt 10 production hardening schema version
+SCHEMA_VERSION = 5  # Prompt 12 production deployment schema version
 
 
 def run_migrations():
     """
-    Ensures schema integrity and versioned database migration.
-    Creates tables safely without destructive table drops and seeds initial records.
+    Ensures schema integrity and versioned database migration across PostgreSQL and SQLite.
+    Creates tables safely without destructive table drops and seeds initial records only when configured.
     """
-    logger.info("Running database migrations...")
+    logger.info(f"Running database migrations (PostgreSQL: {is_postgres()})...")
     Base.metadata.create_all(bind=engine)
 
-    # Add new Prompt 10 columns safely to existing SQLite tables
+    # Add columns safely across both SQLite and PostgreSQL
     with engine.connect() as conn:
         def safe_add_column(table_name: str, col_name: str, col_def: str):
             try:
                 conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {col_name} {col_def}"))
                 conn.commit()
             except Exception:
+                # Column already exists or table freshly created
                 pass
 
         safe_add_column("inspections", "report_sha256", "TEXT")
@@ -44,27 +46,40 @@ def run_migrations():
         safe_add_column("audit_events", "previous_event_hash", "TEXT")
         safe_add_column("audit_events", "event_hash", "TEXT")
 
-        # Check and manage schema version table
-        conn.execute(text("""
-            CREATE TABLE IF NOT EXISTS schema_version (
-                version INTEGER PRIMARY KEY,
-                applied_at TEXT NOT NULL
-            )
-        """))
-        conn.commit()
-
-        result = conn.execute(text("SELECT MAX(version) FROM schema_version")).scalar()
-        current_version = result if result is not None else 0
-
-        if current_version < SCHEMA_VERSION:
-            logger.info(f"Upgrading database schema from version {current_version} to {SCHEMA_VERSION}")
-            conn.execute(
-                text("INSERT INTO schema_version (version, applied_at) VALUES (:v, :t)"),
-                {"v": SCHEMA_VERSION, "t": datetime.now(timezone.utc).isoformat()},
-            )
+        # Schema version table
+        try:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS schema_version (
+                    version INTEGER PRIMARY KEY,
+                    applied_at TEXT NOT NULL
+                )
+            """))
             conn.commit()
 
-    # Seed initial users & complaints if empty
+            result = conn.execute(text("SELECT MAX(version) FROM schema_version")).scalar()
+            current_version = result if result is not None else 0
+
+            if current_version < SCHEMA_VERSION:
+                logger.info(f"Upgrading database schema from version {current_version} to {SCHEMA_VERSION}")
+                conn.execute(
+                    text("INSERT INTO schema_version (version, applied_at) VALUES (:v, :t)"),
+                    {"v": SCHEMA_VERSION, "t": datetime.now(timezone.utc).isoformat()},
+                )
+                conn.commit()
+        except Exception as e:
+            logger.warning(f"Schema version tracking note: {e}")
+
+    # Seed initial users & complaints if configured
+    is_prod = os.environ.get("ENVIRONMENT", "development").lower() == "production"
+    seed_flag = os.environ.get("SEED_DEMO_DATA", "").lower()
+
+    # In production default is FALSE; in development default is TRUE
+    should_seed = (seed_flag == "true") if is_prod else (seed_flag != "false")
+
+    if not should_seed:
+        logger.info("Demo data seeding disabled (production mode or SEED_DEMO_DATA=false).")
+        return
+
     db = SessionLocal()
     try:
         user_count = db.query(UserDB).count()

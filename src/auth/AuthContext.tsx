@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole, LoginCredentials, AuthResponse } from './authTypes';
 import { authApi, authStorage } from './authApi';
+import { supabase, signInWithGoogle, signOutSupabase, isSupabaseConfigured } from '../services/supabase/supabaseClient';
 
 interface AuthContextType {
   user: User | null;
@@ -10,9 +11,11 @@ interface AuthContextType {
   isOfficer: boolean;
   isConsumer: boolean;
   login: (credentials: LoginCredentials) => Promise<AuthResponse>;
+  loginWithGoogle: (redirectTo?: string) => Promise<void>;
   logout: () => Promise<void>;
   hasRole: (role: UserRole | UserRole[]) => boolean;
   clearError: () => void;
+  isSupabaseEnabled: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,7 +26,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Validate session with backend or local store on initial mount
+    // 1. Initial verification against backend with stored token
     const verifySession = async () => {
       try {
         const token = authStorage.getToken();
@@ -32,19 +35,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (currentUser) {
             setUser(currentUser);
           } else {
-            // Token expired or invalid
             authStorage.clearSession();
             setUser(null);
           }
         }
       } catch (err) {
-        console.warn('Session verification fallback:', err);
+        console.warn('Session verification notice:', err);
       } finally {
         setIsLoading(false);
       }
     };
 
     verifySession();
+
+    // 2. Supabase Auth listener (for Google OAuth redirects and token refresh)
+    if (supabase) {
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (session?.access_token) {
+          authStorage.setToken(session.access_token);
+          try {
+            const currentUser = await authApi.getMe();
+            if (currentUser) {
+              setUser(currentUser);
+            }
+          } catch (e) {
+            console.warn('Could not sync user with backend:', e);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          authStorage.clearSession();
+          setUser(null);
+        }
+      });
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    }
   }, []);
 
   const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
@@ -63,9 +91,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const loginWithGoogle = async (redirectTo?: string): Promise<void> => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await signInWithGoogle(redirectTo);
+    } catch (err: any) {
+      const msg = err.message || 'Unable to initiate Google Sign In.';
+      setError(msg);
+      setIsLoading(false);
+      throw err;
+    }
+  };
+
   const logout = async () => {
     setIsLoading(true);
     try {
+      await signOutSupabase();
       await authApi.logout();
     } finally {
       setUser(null);
@@ -95,9 +137,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isOfficer,
         isConsumer,
         login,
+        loginWithGoogle,
         logout,
         hasRole,
         clearError: () => setError(null),
+        isSupabaseEnabled: isSupabaseConfigured(),
       }}
     >
       {children}

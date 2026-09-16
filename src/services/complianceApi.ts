@@ -4,6 +4,7 @@
  */
 
 import { OCRLine } from './ocrApi';
+import { getApiUrl } from './api/config';
 
 export interface ExtractedDeclarationField {
   key: string;
@@ -55,7 +56,7 @@ export async function analyzeCompliance(
   imageHeight: number = 0
 ): Promise<ComplianceAnalysisResponse> {
   try {
-    const response = await fetch('/api/compliance/analyze', {
+    const response = await fetch(getApiUrl('/api/compliance/analyze'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

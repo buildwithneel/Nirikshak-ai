@@ -10,10 +10,12 @@ import {
   ShieldCheck,
   CheckCheck,
   ExternalLink,
+  Server,
 } from 'lucide-react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { LanguageSelector } from '../common/LanguageSelector';
 import { ConnectionStatusBadge } from '../common/ConnectionStatusBadge';
+import { SystemStatusModal } from '../common/SystemStatusModal';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { useAuth } from '../../auth/AuthContext';
 import { notificationsApi, NotificationItem } from '../../services/api/notificationsApi';
@@ -33,6 +35,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
   const { user, isOfficer, logout } = useAuth();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResultItem[]>([]);
@@ -313,6 +316,20 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
           >
             <HelpCircle className="w-4 h-4" />
           </button>
+
+          {/* System Production Diagnostics Button */}
+          <button
+            onClick={() => setShowStatusModal(true)}
+            className="p-2 text-govink-secondary hover:text-govgreen-800 hover:bg-institutional-subtle rounded-lg transition-colors focus:outline-none cursor-pointer"
+            title="System Production Diagnostics"
+          >
+            <Server className="w-4 h-4" />
+          </button>
+
+          <SystemStatusModal
+            isOpen={showStatusModal}
+            onClose={() => setShowStatusModal(false)}
+          />
 
           <div className="h-5 w-px bg-institutional-border mx-0.5" />
 

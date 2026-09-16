@@ -1,4 +1,5 @@
 import { authStorage } from '../../auth/authApi';
+import { getApiUrl } from './config';
 
 export interface DashboardStats {
   total_complaints: number;
@@ -30,7 +31,7 @@ function getAuthHeader(): Record<string, string> {
 
 export const dashboardApi = {
   async getStats(): Promise<DashboardStats> {
-    const res = await fetch('/api/dashboard/stats', {
+    const res = await fetch(getApiUrl('/api/dashboard/stats'), {
       headers: {
         ...getAuthHeader(),
       },
@@ -44,7 +45,7 @@ export const dashboardApi = {
 
   async search(query: string): Promise<SearchResultItem[]> {
     if (!query.trim()) return [];
-    const res = await fetch(`/api/dashboard/search?q=${encodeURIComponent(query)}`, {
+    const res = await fetch(getApiUrl(`/api/dashboard/search?q=${encodeURIComponent(query)}`), {
       headers: {
         ...getAuthHeader(),
       },
@@ -62,7 +63,7 @@ export const dashboardApi = {
     recently_submitted_complaints: any[];
     recently_updated: any[];
   }> {
-    const res = await fetch(`/api/dashboard/work-queue?timeframe=${encodeURIComponent(timeframe)}`, {
+    const res = await fetch(getApiUrl(`/api/dashboard/work-queue?timeframe=${encodeURIComponent(timeframe)}`), {
       headers: {
         ...getAuthHeader(),
       },

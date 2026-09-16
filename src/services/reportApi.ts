@@ -4,13 +4,14 @@
  */
 
 import { InspectionRecord } from '../types';
+import { getApiUrl, getAuthHeaders } from './api/config';
 
 export async function generateInspectionPdf(record: InspectionRecord): Promise<Blob> {
-  const response = await fetch('/api/reports/generate-pdf', {
+  const response = await fetch(getApiUrl('/api/reports/generate-pdf'), {
     method: 'POST',
-    headers: {
+    headers: getAuthHeaders({
       'Content-Type': 'application/json',
-    },
+    }),
     body: JSON.stringify(record),
   });
 

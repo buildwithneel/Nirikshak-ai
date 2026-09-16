@@ -1,4 +1,5 @@
 import { authStorage } from '../../auth/authApi';
+import { getApiUrl } from './config';
 
 export interface AnalyticsOverview {
   inspections: {
@@ -61,7 +62,7 @@ export const analyticsApi = {
     if (toDate) params.append('to', toDate);
     const qs = params.toString() ? `?${params.toString()}` : '';
 
-    const res = await fetch(`/api/analytics/overview${qs}`, {
+    const res = await fetch(getApiUrl(`/api/analytics/overview${qs}`), {
       headers: {
         ...getAuthHeader(),
       },
@@ -74,7 +75,7 @@ export const analyticsApi = {
   },
 
   async getTrends(): Promise<AnalyticsTrends> {
-    const res = await fetch('/api/analytics/trends', {
+    const res = await fetch(getApiUrl('/api/analytics/trends'), {
       headers: {
         ...getAuthHeader(),
       },
@@ -87,7 +88,7 @@ export const analyticsApi = {
   },
 
   async getCategories(): Promise<AnalyticsCategories> {
-    const res = await fetch('/api/analytics/categories', {
+    const res = await fetch(getApiUrl('/api/analytics/categories'), {
       headers: {
         ...getAuthHeader(),
       },
@@ -100,7 +101,7 @@ export const analyticsApi = {
   },
 
   async getReviewSignals(): Promise<ReviewSignals> {
-    const res = await fetch('/api/analytics/review-signals', {
+    const res = await fetch(getApiUrl('/api/analytics/review-signals'), {
       headers: {
         ...getAuthHeader(),
       },

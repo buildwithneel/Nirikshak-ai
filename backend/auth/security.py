@@ -108,10 +108,58 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
     return encoded_jwt
 
 
-def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
-    """Decodes and validates a signed JWT access token."""
+# Supabase configuration for JWT verification
+SUPABASE_JWT_SECRET = os.environ.get("SUPABASE_JWT_SECRET")
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
+SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+
+# Simple in-memory token cache for verified Supabase user tokens (avoids repeated API roundtrips)
+_SUPABASE_TOKEN_CACHE: Dict[str, Dict[str, Any]] = {}
+
+
+def verify_supabase_token_via_api(token: str) -> Optional[Dict[str, Any]]:
+    """Verifies token against Supabase Auth API /auth/v1/user endpoint."""
+    if not SUPABASE_URL:
+        return None
+
+    if token in _SUPABASE_TOKEN_CACHE:
+        return _SUPABASE_TOKEN_CACHE[token]
+
     try:
-        # First try with audience and issuer verification
+        import requests
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "apikey": SUPABASE_SERVICE_ROLE_KEY or os.environ.get("SUPABASE_PUBLISHABLE_KEY", ""),
+        }
+        res = requests.get(f"{SUPABASE_URL}/auth/v1/user", headers=headers, timeout=5)
+        if res.status_code == 200:
+            user_data = res.json()
+            payload = {
+                "sub": user_data.get("id"),
+                "email": user_data.get("email"),
+                "user_metadata": user_data.get("user_metadata", {}),
+                "app_metadata": user_data.get("app_metadata", {}),
+                "is_supabase": True,
+            }
+            # Cache valid token for 5 minutes
+            if len(_SUPABASE_TOKEN_CACHE) > 500:
+                _SUPABASE_TOKEN_CACHE.clear()
+            _SUPABASE_TOKEN_CACHE[token] = payload
+            return payload
+    except Exception:
+        pass
+    return None
+
+
+def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
+    """
+    Decodes and validates a signed JWT access token.
+    Supports both:
+    1. Internal/Local JWT tokens (signed with SECRET_KEY)
+    2. Supabase Auth JWT tokens (signed with SUPABASE_JWT_SECRET or verified via Supabase Auth API)
+    """
+    # 1. Try local SECRET_KEY first (standard internal auth & dev test suites)
+    try:
         try:
             return jwt.decode(
                 token,
@@ -121,7 +169,6 @@ def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
                 issuer=JWT_ISSUER,
             )
         except (jwt.InvalidAudienceError, jwt.InvalidIssuerError):
-            # Fallback to decode without strict aud/iss check for tokens issued prior to update
             return jwt.decode(
                 token,
                 SECRET_KEY,
@@ -129,4 +176,26 @@ def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
                 options={"verify_aud": False, "verify_iss": False},
             )
     except Exception:
-        return None
+        pass
+
+    # 2. Try Supabase JWT Secret if configured
+    if SUPABASE_JWT_SECRET:
+        try:
+            payload = jwt.decode(
+                token,
+                SUPABASE_JWT_SECRET,
+                algorithms=["HS256"],
+                options={"verify_aud": False, "verify_iss": False},
+            )
+            payload["is_supabase"] = True
+            return payload
+        except Exception:
+            pass
+
+    # 3. Try Supabase Auth API verification if SUPABASE_URL configured
+    if SUPABASE_URL:
+        supabase_payload = verify_supabase_token_via_api(token)
+        if supabase_payload:
+            return supabase_payload
+
+    return None

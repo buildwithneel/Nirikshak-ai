@@ -1,3 +1,4 @@
+import os
 import io
 import time
 import logging
@@ -21,10 +22,25 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Allow CORS for frontend dev server
+# CORS configuration: configurable via CORS_ORIGINS, with institutional defaults
+cors_origins_env = os.environ.get("CORS_ORIGINS", "")
+if cors_origins_env:
+    allowed_origins = [orig.strip() for orig in cors_origins_env.split(",") if orig.strip()]
+else:
+    allowed_origins = [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "https://nirikshak-ai.vercel.app",
+    ]
+
+# If in dev mode and not explicitly restricted, allow wildcard for testing
+if os.environ.get("ENVIRONMENT", "development").lower() != "production" and not cors_origins_env:
+    allowed_origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -175,7 +191,7 @@ class ComplianceAnalysisResponse(BaseModel):
     error: Optional[str] = None
 
 
-from database.connection import engine
+from database.connection import engine, get_db_type, is_postgres
 from storage.service import storage_service
 from sqlalchemy import text
 
@@ -262,8 +278,8 @@ def detailed_health():
         "components": {
             "database": {
                 "status": db_status,
-                "engine": "SQLite / PostgreSQL Ready",
-                "schema_version": 4,
+                "engine": get_db_type(),
+                "schema_version": 5,
             },
             "ocr_engine": {
                 "name": "RapidOCR (PaddleOCR ONNX)",
@@ -514,4 +530,7 @@ async def process_ocr(image: UploadFile = File(...)):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    port = int(os.environ.get("PORT", "8000"))
+    host = os.environ.get("HOST", "0.0.0.0" if os.environ.get("PORT") else "127.0.0.1")
+    logger.info(f"Starting NIRIKSHAK AI API on {host}:{port}")
+    uvicorn.run(app, host=host, port=port)

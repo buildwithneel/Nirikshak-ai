@@ -3,6 +3,8 @@
  * Interacts with /api/inspections/{id}/copilot for evidence-grounded assistance.
  */
 
+import { getApiUrl, getAuthHeaders } from './config';
+
 export interface CopilotSource {
   type: 'EVIDENCE' | 'OCR' | 'DECLARATION' | 'FINDING' | 'RULE' | 'OBSERVATION' | 'CONFLICT';
   label: string;
@@ -44,22 +46,11 @@ export interface CopilotResponse {
   request_id?: string;
 }
 
-function getAuthHeaders(): HeadersInit {
-  const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-  return headers;
-}
-
 export const copilotApi = {
   async query(inspectionId: string, payload: CopilotQueryRequest): Promise<CopilotResponse> {
-    const res = await fetch(`/api/inspections/${inspectionId}/copilot`, {
+    const res = await fetch(getApiUrl(`/api/inspections/${inspectionId}/copilot`), {
       method: 'POST',
-      headers: getAuthHeaders(),
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify(payload),
     });
 
@@ -77,7 +68,7 @@ export const copilotApi = {
 
   async getSuggestedQuestions(inspectionId: string): Promise<string[]> {
     try {
-      const res = await fetch(`/api/inspections/${inspectionId}/copilot/suggested`, {
+      const res = await fetch(getApiUrl(`/api/inspections/${inspectionId}/copilot/suggested`), {
         headers: getAuthHeaders(),
       });
       if (!res.ok) return [];
@@ -95,9 +86,9 @@ export const copilotApi = {
     notes?: string
   ): Promise<void> {
     try {
-      await fetch(`/api/inspections/${inspectionId}/copilot/feedback`, {
+      await fetch(getApiUrl(`/api/inspections/${inspectionId}/copilot/feedback`), {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           copilot_response_id: copilotResponseId,
           feedback,
@@ -111,7 +102,7 @@ export const copilotApi = {
 
   async getHistory(inspectionId: string): Promise<any[]> {
     try {
-      const res = await fetch(`/api/inspections/${inspectionId}/copilot/history`, {
+      const res = await fetch(getApiUrl(`/api/inspections/${inspectionId}/copilot/history`), {
         headers: getAuthHeaders(),
       });
       if (!res.ok) return [];

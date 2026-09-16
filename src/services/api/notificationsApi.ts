@@ -1,4 +1,5 @@
 import { authStorage } from '../../auth/authApi';
+import { getApiUrl } from './config';
 
 export interface NotificationItem {
   id: string;
@@ -19,7 +20,7 @@ function getAuthHeader(): Record<string, string> {
 
 export const notificationsApi = {
   async getNotifications(): Promise<NotificationItem[]> {
-    const res = await fetch('/api/notifications', {
+    const res = await fetch(getApiUrl('/api/notifications'), {
       headers: {
         ...getAuthHeader(),
       },
@@ -32,7 +33,7 @@ export const notificationsApi = {
   },
 
   async markAsRead(id: string): Promise<boolean> {
-    const res = await fetch(`/api/notifications/${id}/read`, {
+    const res = await fetch(getApiUrl(`/api/notifications/${id}/read`), {
       method: 'PATCH',
       headers: {
         ...getAuthHeader(),
@@ -42,7 +43,7 @@ export const notificationsApi = {
   },
 
   async markAllAsRead(): Promise<boolean> {
-    const res = await fetch('/api/notifications/read-all', {
+    const res = await fetch(getApiUrl('/api/notifications/read-all'), {
       method: 'POST',
       headers: {
         ...getAuthHeader(),

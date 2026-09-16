@@ -169,5 +169,18 @@ class StorageService:
         return file_reference
 
 
+def create_storage_provider() -> BaseStorageProvider:
+    """Factory creating SupabaseStorageProvider if configured, otherwise LocalFileSystemStorageProvider."""
+    supabase_url = os.environ.get("SUPABASE_URL")
+    service_role_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+    if supabase_url and service_role_key:
+        try:
+            from .supabase_provider import SupabaseStorageProvider
+            return SupabaseStorageProvider(supabase_url=supabase_url, service_role_key=service_role_key)
+        except Exception as e:
+            logger.warning(f"Could not initialize SupabaseStorageProvider: {e}. Using local storage.")
+    return LocalFileSystemStorageProvider()
+
+
 # Global singleton storage service
-storage_service = StorageService()
+storage_service = StorageService(provider=create_storage_provider())

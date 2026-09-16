@@ -1,4 +1,5 @@
 import { authStorage } from '../../auth/authApi';
+import { getApiUrl } from './config';
 
 export interface InspectionImageItem {
   id: string;
@@ -59,7 +60,7 @@ function getAuthHeader(): Record<string, string> {
 
 export const imagesApi = {
   async getInspectionImages(inspectionId: string): Promise<InspectionImageItem[]> {
-    const res = await fetch(`/api/inspections/${inspectionId}/images`, {
+    const res = await fetch(getApiUrl(`/api/inspections/${inspectionId}/images`), {
       headers: {
         ...getAuthHeader(),
       },
@@ -81,7 +82,7 @@ export const imagesApi = {
     formData.append('panel_type', panelType);
     formData.append('source', source);
 
-    const res = await fetch(`/api/inspections/${inspectionId}/images`, {
+    const res = await fetch(getApiUrl(`/api/inspections/${inspectionId}/images`), {
       method: 'POST',
       headers: {
         ...getAuthHeader(),
@@ -97,7 +98,7 @@ export const imagesApi = {
   },
 
   async updatePanelType(imageId: string, panelType: string): Promise<InspectionImageItem> {
-    const res = await fetch(`/api/inspection-images/${imageId}`, {
+    const res = await fetch(getApiUrl(`/api/inspection-images/${imageId}`), {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -114,7 +115,7 @@ export const imagesApi = {
   },
 
   async runImageOCR(imageId: string): Promise<any> {
-    const res = await fetch(`/api/inspection-images/${imageId}/ocr`, {
+    const res = await fetch(getApiUrl(`/api/inspection-images/${imageId}/ocr`), {
       method: 'POST',
       headers: {
         ...getAuthHeader(),
@@ -129,7 +130,7 @@ export const imagesApi = {
   },
 
   async deleteInspectionImage(imageId: string): Promise<any> {
-    const res = await fetch(`/api/inspection-images/${imageId}`, {
+    const res = await fetch(getApiUrl(`/api/inspection-images/${imageId}`), {
       method: 'DELETE',
       headers: {
         ...getAuthHeader(),
@@ -144,7 +145,7 @@ export const imagesApi = {
   },
 
   async getEvidenceIntelligence(inspectionId: string): Promise<EvidenceIntelligenceResponse> {
-    const res = await fetch(`/api/inspections/${inspectionId}/evidence`, {
+    const res = await fetch(getApiUrl(`/api/inspections/${inspectionId}/evidence`), {
       headers: {
         ...getAuthHeader(),
       },
@@ -157,7 +158,7 @@ export const imagesApi = {
   },
 
   async getConflicts(inspectionId: string): Promise<DeclarationConflict[]> {
-    const res = await fetch(`/api/inspections/${inspectionId}/conflicts`, {
+    const res = await fetch(getApiUrl(`/api/inspections/${inspectionId}/conflicts`), {
       headers: {
         ...getAuthHeader(),
       },
@@ -170,6 +171,6 @@ export const imagesApi = {
   },
 
   getImageContentUrl(imageId: string): string {
-    return `/api/inspection-images/${imageId}/content`;
+    return getApiUrl(`/api/inspection-images/${imageId}/content`);
   },
 };

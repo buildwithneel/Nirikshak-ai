@@ -1,0 +1,32 @@
+# =====================================================================
+# NIRIKSHAK AI — Production Python Dependencies (Render Web Service)
+# =====================================================================
+
+# Core Web Framework
+fastapi>=0.100.0
+uvicorn[standard]>=0.23.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+python-multipart>=0.0.6
+
+# Database (Supabase PostgreSQL + SQLite dev fallback)
+SQLAlchemy>=2.0.0
+psycopg2-binary>=2.9.9
+
+# Authentication & Cryptography
+PyJWT>=2.8.0
+passlib>=1.7.4
+
+# Computer Vision & Real OCR Pipeline
+rapidocr-onnxruntime>=1.3.0
+onnxruntime>=1.16.0
+opencv-python-headless>=4.8.0
+pillow>=10.0.0
+numpy>=1.24.0
+
+# Statutory PDF Report Generation
+reportlab>=4.0.0
+
+# Network & Cloud Storage Client
+requests>=2.31.0
+python-dotenv>=1.0.0

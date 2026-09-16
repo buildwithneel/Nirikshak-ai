@@ -1,4 +1,5 @@
 import { authStorage } from '../../auth/authApi';
+import { getApiUrl } from './config';
 
 export interface ProductCatalogItem {
   id: string;
@@ -49,7 +50,7 @@ export const productsApi = {
     if (category && category !== 'ALL') params.append('category', category);
     const qs = params.toString() ? `?${params.toString()}` : '';
 
-    const res = await fetch(`/api/products${qs}`, {
+    const res = await fetch(getApiUrl(`/api/products${qs}`), {
       headers: {
         ...getAuthHeader(),
       },
@@ -62,7 +63,7 @@ export const productsApi = {
   },
 
   async getProductDetail(productId: string): Promise<ProductDetail> {
-    const res = await fetch(`/api/products/${encodeURIComponent(productId)}`, {
+    const res = await fetch(getApiUrl(`/api/products/${encodeURIComponent(productId)}`), {
       headers: {
         ...getAuthHeader(),
       },

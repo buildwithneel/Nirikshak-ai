@@ -12,6 +12,7 @@ import {
 import { Breadcrumbs } from '../../components/ui/Breadcrumbs';
 import { mockLegalMetrologyRules } from '../../data/mockRules';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { getApiUrl } from '../../services/api/config';
 
 interface LegalRuleItem {
   id: string;
@@ -64,9 +65,9 @@ export const RulesPage: React.FC = () => {
     async function loadLegalData() {
       try {
         const [rulesRes, sourcesRes, versionsRes] = await Promise.allSettled([
-          fetch('/api/rules').then(r => r.ok ? r.json() : null),
-          fetch('/api/rules/sources').then(r => r.ok ? r.json() : null),
-          fetch('/api/rules/versions').then(r => r.ok ? r.json() : null),
+          fetch(getApiUrl('/api/rules')).then(r => r.ok ? r.json() : null),
+          fetch(getApiUrl('/api/rules/sources')).then(r => r.ok ? r.json() : null),
+          fetch(getApiUrl('/api/rules/versions')).then(r => r.ok ? r.json() : null),
         ]);
 
         if (rulesRes.status === 'fulfilled' && rulesRes.value && rulesRes.value.rules) {
