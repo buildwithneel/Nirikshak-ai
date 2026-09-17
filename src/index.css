@@ -21,11 +21,34 @@
     --ease-out-institution: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
+  .dark {
+    --bg-app: #0B110E;
+    --bg-surface: #131B17;
+    --bg-secondary: #19241F;
+    --border-color: #24342C;
+    --text-primary: #F1F5F3;
+    --text-secondary: #A3B1AA;
+    --text-muted: #7A8780;
+    --brand-forest: #166534;
+    --brand-primary: #22C55E;
+    --brand-navy: #23476E;
+    --brand-teal: #14B8A6;
+    --status-compliant: #22C55E;
+    --status-review: #F59E0B;
+    --status-violation: #EF4444;
+  }
+
   html {
     background-color: #F8FAF9;
     color: #17211B;
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  html.dark {
+    background-color: #0B110E;
+    color: #F1F5F3;
+    color-scheme: dark;
   }
 
   body {
@@ -36,6 +59,11 @@
     overflow-x: hidden;
   }
 
+  html.dark body {
+    background-color: #0B110E;
+    color: #F1F5F3;
+  }
+
   /* Refined institutional scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
@@ -44,12 +72,21 @@
   ::-webkit-scrollbar-track {
     background: #F1F5F3;
   }
+  .dark ::-webkit-scrollbar-track {
+    background: #131B17;
+  }
   ::-webkit-scrollbar-thumb {
     background: #DDE5E1;
     border-radius: 3px;
   }
+  .dark ::-webkit-scrollbar-thumb {
+    background: #24342C;
+  }
   ::-webkit-scrollbar-thumb:hover {
     background: #C7D2CD;
+  }
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: #34483E;
   }
 }
 
@@ -60,9 +97,89 @@
       linear-gradient(to right, rgba(221, 229, 225, 0.5) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(221, 229, 225, 0.5) 1px, transparent 1px);
   }
+
+  .dark .bg-grid-pattern {
+    background-image: 
+      linear-gradient(to right, rgba(36, 52, 44, 0.4) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(36, 52, 44, 0.4) 1px, transparent 1px);
+  }
   
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+
+  /* Centralized Typography Tokens & Tabular Numbers */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .font-display {
+    font-size: 2rem;
+    line-height: 2.375rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+  }
+
+  .font-page-title {
+    font-size: 1.5rem;
+    line-height: 1.875rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .font-section-title {
+    font-size: 1.125rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+
+  .font-card-title {
+    font-size: 0.9375rem;
+    line-height: 1.375rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .font-body {
+    font-size: 0.875rem;
+    line-height: 1.375rem;
+    font-weight: 400;
+  }
+
+  .font-body-medium {
+    font-size: 0.875rem;
+    line-height: 1.375rem;
+    font-weight: 500;
+  }
+
+  .font-body-small {
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+    font-weight: 400;
+  }
+
+  .font-caption {
+    font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+
+  .font-metric {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .font-metric-small {
+    font-size: 1.25rem;
+    line-height: 1.625rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    font-variant-numeric: tabular-nums;
   }
 }
 

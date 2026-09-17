@@ -62,7 +62,7 @@
    ```
 3. Push to your institutional GitHub repository:
    ```bash
-   git remote add origin https://github.com/YOUR_ORG/nirikshak-ai.git
+   git remote add origin https://github.com/buildwithneel/Nirikshak-ai.git
    git push -u origin main
    ```
 

@@ -1,52 +1,37 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { Sidebar } from './Sidebar';
 import { TopHeader } from './TopHeader';
-import { MobileBottomNav } from './MobileBottomNav';
+import { BottomNavigationDock } from './BottomNavigationDock';
 
 export const AppLayout: React.FC = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
-
   return (
-    <div className="min-h-screen bg-institutional-bg flex text-govink-primary">
-      {/* Sidebar Navigation */}
-      <Sidebar
-        isCollapsed={isCollapsed}
-        setIsCollapsed={setIsCollapsed}
-        isMobileOpen={isMobileOpen}
-        setIsMobileOpen={setIsMobileOpen}
-      />
+    <div className="min-h-screen bg-institutional-50 dark:bg-[#0B110E] flex flex-col text-institutional-900 dark:text-[#F1F5F3] transition-colors duration-200">
+      {/* Full-Width Institutional Top Header */}
+      <TopHeader />
 
-      {/* Main Content Shell */}
-      <div
-        className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
-          isCollapsed ? 'lg:pl-20' : 'lg:pl-64'
-        }`}
-      >
-        <TopHeader onMenuClick={() => setIsMobileOpen(true)} />
+      {/* Main Content Area - Full Viewport Width with Ergonomic Clearance */}
+      <main className="flex-1 p-3.5 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto pb-28 sm:pb-32 transition-all">
+        <Outlet />
+      </main>
 
-        <main className="flex-1 p-3.5 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto pb-24 lg:pb-8">
-          <Outlet />
-        </main>
+      {/* Institutional Desktop Footer */}
+      <footer className="border-t border-institutional-200 dark:border-institutional-800 bg-white dark:bg-[#131B17] px-6 py-4 text-xs text-institutional-600 dark:text-institutional-400 hidden lg:flex items-center justify-between pb-24 no-print transition-colors">
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-institutional-900 dark:text-white">NIRIKSHAK AI</span>
+          <span>•</span>
+          <span>Legal Metrology (Packaged Commodities) Rules, 2011 Compliance Platform</span>
+        </div>
+        <div className="flex items-center gap-3 text-[11px] text-institutional-500 dark:text-institutional-400 font-mono">
+          <span>Build v2.1.0-INSTITUTIONAL</span>
+          <span>•</span>
+          <span className="text-govgreen-700 dark:text-govgreen-400 font-semibold">STATUS: OPTIMAL</span>
+        </div>
+      </footer>
 
-        {/* Desktop Institutional Footer */}
-        <footer className="border-t border-institutional-border bg-white px-6 py-4 text-xs text-govink-secondary hidden lg:flex items-center justify-between no-print">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-govink-primary">NIRIKSHAK AI</span>
-            <span>•</span>
-            <span>Legal Metrology (Packaged Commodities) Rules, 2011 Compliance Platform</span>
-          </div>
-          <div className="flex items-center gap-3 text-[11px] text-govink-muted font-mono">
-            <span>Build v2.1.0-INSTITUTIONAL</span>
-            <span>•</span>
-            <span className="text-govgreen-900 font-semibold">STATUS: OPTIMAL</span>
-          </div>
-        </footer>
-
-        {/* Mobile Bottom Navigation Bar (Android & iOS) */}
-        <MobileBottomNav onOpenDrawer={() => setIsMobileOpen(true)} />
-      </div>
+      {/* Modern Animated Global Floating Navigation Dock */}
+      <BottomNavigationDock />
     </div>
   );
 };
+export default AppLayout;
+

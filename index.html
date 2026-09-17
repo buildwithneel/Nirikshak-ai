@@ -9,9 +9,24 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Sans+Gujarati:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Sans+Gujarati:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <!-- Instant Theme Detection Script (Default: Day Mode) -->
+    <script>
+      (function() {
+        try {
+          var storedTheme = localStorage.getItem('nirikshak_theme');
+          var isDark = storedTheme === 'dark';
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
-  <body class="bg-institutional-100 text-institutional-900 antialiased font-sans selection:bg-govblue-100 selection:text-govblue-900">
+  <body class="bg-institutional-50 dark:bg-[#0B110E] text-institutional-900 dark:text-[#F1F5F3] antialiased font-sans selection:bg-govgreen-100 dark:selection:bg-govgreen-900 selection:text-govgreen-900 dark:selection:text-govgreen-100 min-h-screen transition-colors duration-200">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

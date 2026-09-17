@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Layers,
   Lock,
   Mail,
   Eye,
@@ -14,16 +13,18 @@ import {
   Sparkles,
   UserCheck,
   Smartphone,
+  ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { LanguageSelector } from '../../components/common/LanguageSelector';
+import { ThemeToggle } from '../../components/common/ThemeToggle';
 import { useLanguage } from '../../i18n/LanguageContext';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, loginWithGoogle, isAuthenticated, isOfficer, isSupabaseEnabled } = useAuth();
+  const { login, loginWithGoogle, isAuthenticated, isOfficer } = useAuth();
   const { t } = useLanguage();
 
   const [email, setEmail] = useState('inspector@officer.demo');
@@ -68,7 +69,6 @@ export const LoginPage: React.FC = () => {
         rememberMe,
       });
 
-      // Show subtle role confirmation transition
       const userRole = response.user.role === 'OFFICER' ? 'OFFICER' : 'USER';
       setConfirmedRole(userRole);
 
@@ -76,7 +76,7 @@ export const LoginPage: React.FC = () => {
 
       setTimeout(() => {
         navigate(destination, { replace: true });
-      }, 1000);
+      }, 900);
     } catch (err: any) {
       setIsLoading(false);
       setErrorMessage(
@@ -117,47 +117,50 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-institutional-bg flex flex-col justify-center items-center p-4 sm:p-6 bg-grid-pattern selection:bg-govgreen-100 selection:text-govgreen-950">
+    <div className="min-h-screen bg-institutional-50 dark:bg-[#0B110E] flex flex-col justify-center items-center p-4 sm:p-6 bg-grid-pattern selection:bg-govgreen-100 selection:text-govgreen-950 transition-colors duration-200">
       <div className="w-full max-w-md space-y-4 sm:space-y-5 animate-card-entrance">
-        {/* Top Header Row: Branding & Language */}
+        {/* Top Header Row: System Status, Theme Toggle, Language */}
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-govgreen-600 animate-soft-pulse" />
-            <span className="text-[11px] font-mono font-bold text-govink-muted uppercase tracking-wider">
+            <span className="w-2 h-2 rounded-full bg-govgreen-600 dark:bg-govgreen-400 animate-soft-pulse" />
+            <span className="text-[11px] font-mono font-bold text-institutional-500 dark:text-institutional-400 uppercase tracking-wider">
               OFFICIAL SYSTEM
             </span>
           </div>
-          <LanguageSelector />
+          <div className="flex items-center gap-2">
+            <ThemeToggle variant="compact" />
+            <LanguageSelector />
+          </div>
         </div>
 
         {/* Central Seal & Branding */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-govgreen-900 text-white shadow-elevated border border-govgreen-950 animate-logo-reveal">
-            <Layers className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
+        <div className="text-center space-y-2.5">
+          <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-govgreen-800 to-govgreen-950 text-white shadow-elevated border border-govgreen-900 animate-logo-reveal">
+            <ShieldCheck className="w-8 h-8 sm:w-9 sm:h-9 text-govgreen-200" />
           </div>
 
           <div>
             <div className="flex items-center justify-center gap-1.5">
-              <span className="font-black text-2xl sm:text-3xl text-govink-primary tracking-wider font-sans">
-                {t('brand.name', 'NIRIKSHAK')}
+              <span className="font-extrabold text-2xl sm:text-3xl text-institutional-900 dark:text-white tracking-tight font-display">
+                NIRIKSHAK<span className="text-govgreen-700 dark:text-govgreen-400 font-black ml-1">AI</span>
               </span>
-              <span className="text-xs font-bold bg-govgreen-100 text-govgreen-900 border border-govgreen-200 px-1.5 py-0.5 rounded font-mono">
-                AI
+              <span className="text-xs font-bold bg-govgreen-50 dark:bg-govgreen-950 text-govgreen-800 dark:text-govgreen-300 border border-govgreen-200/80 dark:border-govgreen-800/80 px-1.5 py-0.5 rounded font-mono">
+                PCR 2011
               </span>
             </div>
-            <p className="text-xs font-bold text-govink-secondary uppercase tracking-wider mt-0.5">
-              {t('brand.fullTitle', 'LEGAL METROLOGY COMPLIANCE & INSPECTION PLATFORM')}
+            <p className="text-xs font-semibold text-institutional-600 dark:text-institutional-400 uppercase tracking-wider mt-0.5">
+              {t('brand.fullTitle', 'Legal Metrology Compliance & Inspection Platform')}
             </p>
-            <p className="text-[11px] text-govink-muted mt-0.5">
-              {t('brand.portalTag', 'Government of India • Ministry of Consumer Affairs')}
+            <p className="text-[11px] text-institutional-500 dark:text-institutional-400 mt-0.5">
+              Government of India • Ministry of Consumer Affairs
             </p>
           </div>
         </div>
 
         {/* Login Card */}
         <div
-          className={`bg-white rounded-2xl border border-institutional-border p-6 sm:p-8 shadow-elevated transition-all duration-200 ${
-            hasErrorShake ? 'animate-error-shake ring-2 ring-govred-300' : ''
+          className={`bg-white dark:bg-[#131B17] rounded-2xl border border-institutional-200 dark:border-institutional-800 p-6 sm:p-8 shadow-elevated transition-all duration-200 ${
+            hasErrorShake ? 'animate-error-shake ring-2 ring-govred-400' : ''
           }`}
         >
           {confirmedRole ? (
@@ -166,29 +169,29 @@ export const LoginPage: React.FC = () => {
               <div
                 className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center animate-checkmark ${
                   confirmedRole === 'OFFICER'
-                    ? 'bg-govgreen-100 text-govgreen-900 border border-govgreen-300'
-                    : 'bg-govteal-100 text-govteal-800 border border-govteal-300'
+                    ? 'bg-govgreen-100 dark:bg-govgreen-950 text-govgreen-900 dark:text-govgreen-300 border border-govgreen-300 dark:border-govgreen-700'
+                    : 'bg-govteal-100 dark:bg-govteal-950 text-govteal-800 dark:text-govteal-300 border border-govteal-300 dark:border-govteal-700'
                 }`}
               >
                 <CheckCircle2 className="w-9 h-9" />
               </div>
 
               <div>
-                <h3 className="text-lg font-black text-govink-primary">
+                <h3 className="text-lg font-bold text-institutional-900 dark:text-white">
                   {confirmedRole === 'OFFICER'
-                    ? t('auth.officerVerified', 'Officer access verified')
+                    ? t('auth.officerVerified', 'Officer Access Verified')
                     : t('auth.welcomeConsumer', 'Welcome to NIRIKSHAK AI')}
                 </h3>
-                <p className="text-xs text-govink-secondary mt-1">
+                <p className="text-xs text-institutional-500 dark:text-institutional-400 mt-1">
                   {confirmedRole === 'OFFICER'
-                    ? t('auth.openingInspectionPortal', 'Opening Inspection Portal…')
-                    : t('auth.openingConsumerPortal', 'Opening Consumer Portal…')}
+                    ? t('auth.openingInspectionPortal', 'Launching Enforcement Workspace…')
+                    : t('auth.openingConsumerPortal', 'Launching Citizen Portal…')}
                 </p>
               </div>
 
               <div className="flex justify-center items-center gap-1.5 pt-2">
-                <span className="w-2 h-2 rounded-full bg-govgreen-700 animate-ping" />
-                <span className="text-[11px] font-mono font-bold text-govink-muted">
+                <span className="w-2 h-2 rounded-full bg-govgreen-600 dark:bg-govgreen-400 animate-ping" />
+                <span className="text-[11px] font-mono font-bold text-institutional-400">
                   AUTHENTICATED
                 </span>
               </div>
@@ -196,21 +199,18 @@ export const LoginPage: React.FC = () => {
           ) : (
             /* Standard Login Form */
             <div className="space-y-4">
-              <div className="border-b border-institutional-border pb-3">
-                <h2 className="text-base sm:text-lg font-bold text-govink-primary">
+              <div className="border-b border-institutional-100 dark:border-institutional-800 pb-3">
+                <h2 className="text-base sm:text-lg font-bold text-institutional-900 dark:text-white">
                   {t('auth.unifiedSignIn', 'Authorized Sign In')}
                 </h2>
-                <p className="text-xs text-govink-secondary mt-0.5">
-                  {t(
-                    'auth.signInSub',
-                    'Single institutional portal for Enforcement Officers and Consumers'
-                  )}
+                <p className="text-xs text-institutional-500 dark:text-institutional-400 mt-0.5">
+                  Unified access portal for statutory officers and consumer citizens
                 </p>
               </div>
 
               {errorMessage && (
-                <div className="p-3 rounded-lg bg-govred-50 border border-govred-200 text-govred-800 text-xs flex items-start gap-2 animate-slide-down">
-                  <AlertCircle className="w-4 h-4 text-govred-600 flex-shrink-0 mt-0.5" />
+                <div className="p-3 rounded-xl bg-govred-50 dark:bg-govred-950/60 border border-govred-200 dark:border-govred-900/60 text-govred-800 dark:text-govred-300 text-xs flex items-start gap-2 animate-slide-down">
+                  <AlertCircle className="w-4 h-4 text-govred-600 dark:text-govred-400 shrink-0 mt-0.5" />
                   <span className="leading-relaxed">{errorMessage}</span>
                 </div>
               )}
@@ -221,10 +221,10 @@ export const LoginPage: React.FC = () => {
                   type="button"
                   onClick={handleGoogleSignIn}
                   disabled={isGoogleLoading || isLoading}
-                  className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-institutional-border bg-white hover:bg-slate-50 text-govink-primary font-bold text-xs sm:text-sm shadow-sm transition-all hover:border-govgreen-600 focus:outline-none focus:ring-2 focus:ring-govgreen-700 cursor-pointer disabled:opacity-60"
+                  className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-institutional-200 dark:border-institutional-800 bg-white dark:bg-[#1A2420] hover:bg-institutional-50 dark:hover:bg-[#202E28] text-institutional-800 dark:text-institutional-200 font-semibold text-xs sm:text-sm shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-govgreen-600 cursor-pointer disabled:opacity-60"
                   aria-label="Continue with Google"
                 >
-                  <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                     <path
                       fill="#4285F4"
                       d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -248,31 +248,31 @@ export const LoginPage: React.FC = () => {
                 </button>
 
                 <div className="relative flex items-center justify-center my-3">
-                  <div className="border-t border-institutional-border w-full"></div>
-                  <span className="bg-white px-3 text-[10px] sm:text-[11px] font-mono font-bold uppercase text-govink-muted tracking-wider">
+                  <div className="border-t border-institutional-200 dark:border-institutional-800 w-full"></div>
+                  <span className="bg-white dark:bg-[#131B17] px-3 text-[10px] sm:text-[11px] font-mono font-bold uppercase text-institutional-400 tracking-wider">
                     {t('auth.orDivider', 'OR USE CREDENTIALS')}
                   </span>
-                  <div className="border-t border-institutional-border w-full"></div>
+                  <div className="border-t border-institutional-200 dark:border-institutional-800 w-full"></div>
                 </div>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
                 {/* Email Input */}
                 <div>
-                  <label className="block font-bold text-govink-primary mb-1">
+                  <label className="block font-semibold text-institutional-800 dark:text-institutional-200 mb-1">
                     {t('auth.emailLabel', 'Email Address')}
                   </label>
                   <div className="relative">
-                    <Mail className="w-4 h-4 text-govink-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Mail className="w-4 h-4 text-institutional-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="email"
                       value={email}
-                      onChange={e => {
+                      onChange={(e) => {
                         setEmail(e.target.value);
                         if (errorMessage) setErrorMessage(null);
                       }}
                       placeholder="inspector@officer.demo or citizen@gmail.com"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-institutional-border bg-white text-govink-primary font-sans focus:outline-none focus:ring-2 focus:ring-govgreen-700 transition-all text-xs sm:text-sm"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-institutional-200 dark:border-institutional-800 bg-white dark:bg-[#1A2420] text-institutional-900 dark:text-white placeholder:text-institutional-400 focus:outline-none focus:ring-2 focus:ring-govgreen-600 transition-all text-xs sm:text-sm"
                       required
                       autoComplete="username"
                     />
@@ -282,36 +282,36 @@ export const LoginPage: React.FC = () => {
                 {/* Password Input */}
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="font-bold text-govink-primary">
+                    <label className="font-semibold text-institutional-800 dark:text-institutional-200">
                       {t('auth.passwordLabel', 'Password')}
                     </label>
                     <button
                       type="button"
                       onClick={() => setShowForgotModal(true)}
-                      className="text-[11px] text-govgreen-800 hover:text-govgreen-900 hover:underline font-semibold cursor-pointer"
+                      className="text-[11px] text-govgreen-700 dark:text-govgreen-400 hover:underline font-semibold cursor-pointer"
                     >
                       {t('auth.forgotPassword', 'Forgot password?')}
                     </button>
                   </div>
 
                   <div className="relative">
-                    <Lock className="w-4 h-4 text-govink-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Lock className="w-4 h-4 text-institutional-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={password}
-                      onChange={e => {
+                      onChange={(e) => {
                         setPassword(e.target.value);
                         if (errorMessage) setErrorMessage(null);
                       }}
                       placeholder="••••••••••••"
-                      className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-institutional-border bg-white text-govink-primary font-sans focus:outline-none focus:ring-2 focus:ring-govgreen-700 transition-all text-xs sm:text-sm"
+                      className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-institutional-200 dark:border-institutional-800 bg-white dark:bg-[#1A2420] text-institutional-900 dark:text-white placeholder:text-institutional-400 focus:outline-none focus:ring-2 focus:ring-govgreen-600 transition-all text-xs sm:text-sm font-mono"
                       required
                       autoComplete="current-password"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-govink-muted hover:text-govink-primary transition-colors cursor-pointer"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-institutional-400 hover:text-institutional-700 dark:hover:text-institutional-200 transition-colors cursor-pointer"
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
                       {showPassword ? (
@@ -329,15 +329,15 @@ export const LoginPage: React.FC = () => {
                     <input
                       type="checkbox"
                       checked={rememberMe}
-                      onChange={e => setRememberMe(e.target.checked)}
-                      className="w-3.5 h-3.5 rounded text-govgreen-800 focus:ring-govgreen-700 border-institutional-border"
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-3.5 h-3.5 rounded text-govgreen-800 focus:ring-govgreen-700 border-institutional-300 dark:border-institutional-700 bg-white dark:bg-[#1A2420]"
                     />
-                    <span className="text-xs text-govink-secondary font-medium">
+                    <span className="text-xs text-institutional-600 dark:text-institutional-400 font-medium">
                       {t('auth.rememberMe', 'Remember me')}
                     </span>
                   </label>
 
-                  <div className="text-[11px] text-govink-muted font-mono">
+                  <div className="text-[11px] text-institutional-400 font-mono">
                     Auto-Role Detection
                   </div>
                 </div>
@@ -347,37 +347,37 @@ export const LoginPage: React.FC = () => {
                   type="submit"
                   variant="primary"
                   size="lg"
-                  className="w-full min-h-[46px] text-xs sm:text-sm font-bold shadow-subtle mt-2 press-spring justify-center"
+                  className="w-full min-h-[46px] text-xs sm:text-sm font-bold shadow-subtle mt-2 press-spring justify-center bg-govgreen-800 hover:bg-govgreen-900 text-white rounded-xl"
                   isLoading={isLoading}
                   rightIcon={!isLoading ? <ArrowRight className="w-4 h-4" /> : undefined}
                 >
-                  {isLoading ? t('auth.verifying', 'Signing In…') : t('auth.signIn', 'Sign In')}
+                  {isLoading ? t('auth.verifying', 'Signing In…') : t('auth.signIn', 'Sign In to NIRIKSHAK')}
                 </Button>
               </form>
 
-              {/* Dev / Evaluation Quick-Fill Chips */}
-              <div className="pt-3 border-t border-institutional-border">
-                <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-govink-muted uppercase mb-2">
-                  <Sparkles className="w-3 h-3 text-govamber-600" />
-                  <span>Quick Evaluation Credentials</span>
+              {/* Quick Evaluation Demo Chips */}
+              <div className="pt-3 border-t border-institutional-200 dark:border-institutional-800">
+                <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-institutional-500 dark:text-institutional-400 uppercase mb-2">
+                  <Sparkles className="w-3 h-3 text-amber-500" />
+                  <span>Quick Evaluation Accounts</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => quickFillDemo('officer')}
-                    className="flex items-center justify-center gap-1.5 p-2 rounded-lg border border-govgreen-200 bg-govgreen-50 hover:bg-govgreen-100 text-govgreen-900 transition-colors text-left text-xs font-semibold cursor-pointer"
+                    className="flex items-center justify-center gap-1.5 p-2 rounded-xl border border-govgreen-200 dark:border-govgreen-800/80 bg-govgreen-50/80 dark:bg-govgreen-950/40 hover:bg-govgreen-100 dark:hover:bg-govgreen-950/70 text-govgreen-900 dark:text-govgreen-300 transition-colors text-xs font-semibold cursor-pointer"
                   >
-                    <UserCheck className="w-3.5 h-3.5 flex-shrink-0 text-govgreen-800" />
+                    <UserCheck className="w-3.5 h-3.5 shrink-0 text-govgreen-700 dark:text-govgreen-400" />
                     <span className="truncate">Officer Demo</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => quickFillDemo('citizen')}
-                    className="flex items-center justify-center gap-1.5 p-2 rounded-lg border border-govteal-200 bg-govteal-50 hover:bg-govteal-100 text-govteal-900 transition-colors text-left text-xs font-semibold cursor-pointer"
+                    className="flex items-center justify-center gap-1.5 p-2 rounded-xl border border-govteal-200 dark:border-govteal-800/80 bg-govteal-50/80 dark:bg-govteal-950/40 hover:bg-govteal-100 dark:hover:bg-govteal-950/70 text-govteal-900 dark:text-govteal-300 transition-colors text-xs font-semibold cursor-pointer"
                   >
-                    <Smartphone className="w-3.5 h-3.5 flex-shrink-0 text-govteal-700" />
+                    <Smartphone className="w-3.5 h-3.5 shrink-0 text-govteal-600 dark:text-govteal-400" />
                     <span className="truncate">Consumer Demo</span>
                   </button>
                 </div>
@@ -385,33 +385,33 @@ export const LoginPage: React.FC = () => {
 
               {/* Institutional Assurance */}
               <div className="pt-2 text-center">
-                <div className="inline-flex items-center gap-1.5 text-[11px] text-govgreen-900 font-semibold">
-                  <Shield className="w-3.5 h-3.5 text-govgreen-800" />
-                  <span>Secure Role-Based Access</span>
+                <div className="inline-flex items-center gap-1.5 text-[11px] text-govgreen-800 dark:text-govgreen-300 font-semibold">
+                  <Shield className="w-3.5 h-3.5" />
+                  <span>Statutory Role-Based Access Control</span>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        <div className="text-center text-[11px] text-govink-muted">
+        <div className="text-center text-[11px] text-institutional-500 dark:text-institutional-400">
           Legal Metrology Enforcement System • Built for official field &amp; public vigilance
         </div>
       </div>
 
-      {/* Forgot Password Institutional Modal */}
+      {/* Forgot Password Modal */}
       {showForgotModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-govink-primary/60 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl max-w-sm w-full border border-institutional-border shadow-modal p-6 space-y-4 animate-scale-in">
-            <div className="w-12 h-12 rounded-xl bg-govgreen-50 text-govgreen-800 border border-govgreen-200 flex items-center justify-center mx-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white dark:bg-[#131B17] rounded-2xl max-w-sm w-full border border-institutional-200 dark:border-institutional-800 shadow-modal p-6 space-y-4 animate-scale-in">
+            <div className="w-12 h-12 rounded-2xl bg-govgreen-50 dark:bg-govgreen-950 text-govgreen-800 dark:text-govgreen-300 border border-govgreen-200 dark:border-govgreen-800 flex items-center justify-center mx-auto">
               <HelpCircle className="w-6 h-6" />
             </div>
 
             <div className="text-center space-y-1">
-              <h3 className="font-bold text-base text-govink-primary">
+              <h3 className="font-bold text-base text-institutional-900 dark:text-white">
                 Credential Assistance
               </h3>
-              <p className="text-xs text-govink-secondary leading-relaxed">
+              <p className="text-xs text-institutional-600 dark:text-institutional-400 leading-relaxed">
                 For authorized officers, contact your state nodal administrator or Legal Metrology helpdesk. Consumers may use the evaluation demo accounts or reset via verified email.
               </p>
             </div>
@@ -420,7 +420,7 @@ export const LoginPage: React.FC = () => {
               variant="outline"
               size="md"
               onClick={() => setShowForgotModal(false)}
-              className="w-full justify-center text-xs font-bold"
+              className="w-full justify-center text-xs font-bold rounded-xl"
             >
               Close
             </Button>
