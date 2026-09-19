@@ -2,7 +2,7 @@
 
 ## Final Milestone Deployment Architecture: GitHub + Supabase + Google OAuth + Render + Vercel
 
-```text
+
                          CITIZEN / ENFORCEMENT OFFICER
                                        │
                                        ▼
@@ -22,9 +22,7 @@
                                         ▼                 ▼                 ▼
                                   Supabase DB      Supabase Storage      PaddleOCR
                                    PostgreSQL        Images & PDFs      ONNX Engine
-```
 
----
 
 ## 1. Environment Variable Reference Matrix
 
@@ -64,9 +62,6 @@
    ```bash
    git remote add origin https://github.com/buildwithneel/Nirikshak-ai.git
    git push -u origin main
-   ```
-
----
 
 ### Phase 2: Supabase Setup (PostgreSQL + Auth + Storage)
 1. **Create Supabase Project**:

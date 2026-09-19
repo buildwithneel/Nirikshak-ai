@@ -89,15 +89,19 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
           <Link
             to={isOfficer ? '/dashboard' : '/check'}
             className="flex items-center gap-2.5 group focus:outline-none"
-            aria-label="NIRIKSHAK AI Home"
+            aria-label="Nirikshak-AI Home"
           >
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-govgreen-800 to-govgreen-950 dark:from-govgreen-700 dark:to-govgreen-900 text-white flex items-center justify-center shadow-sm ring-1 ring-black/5 dark:ring-white/10 shrink-0 transition-transform group-hover:scale-105">
-              <ShieldCheck className="w-5 h-5 text-govgreen-200" />
+            <div className="w-9 h-9 rounded-xl bg-white dark:bg-[#15201A] p-0.5 shadow-sm border border-institutional-200/80 dark:border-institutional-800 flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+              <img
+                src="/logo-icon.png"
+                alt="Nirikshak-AI Logo"
+                className="w-full h-full object-contain rounded-lg"
+              />
             </div>
             <div className="hidden sm:flex flex-col">
               <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-sm tracking-tight text-institutional-900 dark:text-white font-display">
-                  NIRIKSHAK<span className="text-govgreen-700 dark:text-govgreen-400 font-black ml-1">AI</span>
+                <span className="font-extrabold text-sm tracking-tight text-[#0B2545] dark:text-white font-display">
+                  Nirikshak<span className="text-[#16A34A] dark:text-[#22C55E] font-black ml-0.5">-AI</span>
                 </span>
                 <span className="text-[9px] font-mono font-bold bg-govgreen-50 dark:bg-govgreen-950 text-govgreen-800 dark:text-govgreen-300 px-1.5 py-0.2 rounded border border-govgreen-200/80 dark:border-govgreen-800/80">
                   PCR 2011

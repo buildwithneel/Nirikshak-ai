@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Lock,
@@ -13,7 +13,8 @@ import {
   Sparkles,
   UserCheck,
   Smartphone,
-  ShieldCheck,
+  Download,
+  Monitor,
 } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { Button } from '../../components/ui/Button';
@@ -40,8 +41,63 @@ export const LoginPage: React.FC = () => {
   // Post-login role confirmation screen state
   const [confirmedRole, setConfirmedRole] = useState<'OFFICER' | 'USER' | null>(null);
 
+  // PWA Install prompt state
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+
+  // Android Mode detection (default to true on mobile/Android/PWA, can be toggled for desktop testing)
+  const [isAndroidView, setIsAndroidView] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const isMobile = window.innerWidth < 768;
+      const isAndroid = /Android/i.test(navigator.userAgent);
+      const isStandalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as any).standalone === true;
+      return isMobile || isAndroid || isStandalone;
+    }
+    return false;
+  });
+
+  // Listen for PWA beforeinstallprompt event
+  useEffect(() => {
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+
+    const handleAppInstalled = () => {
+      setIsInstalled(true);
+      setInstallPrompt(null);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    if (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as any).standalone === true
+    ) {
+      setIsInstalled(true);
+    }
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallPWA = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setIsInstalled(true);
+    }
+    setInstallPrompt(null);
+  };
+
   // If already authenticated and visiting /login directly, redirect
-  React.useEffect(() => {
+  useEffect(() => {
     if (isAuthenticated && !confirmedRole) {
       if (isOfficer) {
         navigate('/dashboard', { replace: true });
@@ -72,7 +128,8 @@ export const LoginPage: React.FC = () => {
       const userRole = response.user.role === 'OFFICER' ? 'OFFICER' : 'USER';
       setConfirmedRole(userRole);
 
-      const destination = (location.state as any)?.from?.pathname || (userRole === 'OFFICER' ? '/dashboard' : '/check');
+      const destination =
+        (location.state as any)?.from?.pathname || (userRole === 'OFFICER' ? '/dashboard' : '/check');
 
       setTimeout(() => {
         navigate(destination, { replace: true });
@@ -80,7 +137,8 @@ export const LoginPage: React.FC = () => {
     } catch (err: any) {
       setIsLoading(false);
       setErrorMessage(
-        err.message || t('auth.invalidCredentials', 'Unable to sign in. Check your email and password and try again.')
+        err.message ||
+          t('auth.invalidCredentials', 'Unable to sign in. Check your email and password and try again.')
       );
       triggerShake();
     }
@@ -94,7 +152,11 @@ export const LoginPage: React.FC = () => {
     } catch (err: any) {
       setIsGoogleLoading(false);
       setErrorMessage(
-        err.message || t('auth.googleError', 'Unable to connect to Google Sign-In. You may sign in with institutional credentials below.')
+        err.message ||
+          t(
+            'auth.googleError',
+            'Unable to connect to Google Sign-In. You may sign in with institutional credentials below.'
+          )
       );
       triggerShake();
     }
@@ -117,49 +179,123 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-institutional-50 dark:bg-[#0B110E] flex flex-col justify-center items-center p-4 sm:p-6 bg-grid-pattern selection:bg-govgreen-100 selection:text-govgreen-950 transition-colors duration-200">
-      <div className="w-full max-w-md space-y-4 sm:space-y-5 animate-card-entrance">
-        {/* Top Header Row: System Status, Theme Toggle, Language */}
-        <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-govgreen-600 dark:bg-govgreen-400 animate-soft-pulse" />
-            <span className="text-[11px] font-mono font-bold text-institutional-500 dark:text-institutional-400 uppercase tracking-wider">
-              OFFICIAL SYSTEM
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle variant="compact" />
-            <LanguageSelector />
-          </div>
+    <div className="min-h-screen bg-institutional-50 dark:bg-[#0B110E] flex flex-col justify-center items-center p-3 sm:p-6 bg-grid-pattern selection:bg-govgreen-100 selection:text-govgreen-950 transition-colors duration-200">
+      {/* View Switcher bar (Allows toggling between Android PWA View and Standard Web View) */}
+      <div className="w-full max-w-md flex items-center justify-between mb-3 px-1">
+        <button
+          type="button"
+          onClick={() => setIsAndroidView(!isAndroidView)}
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold transition-all cursor-pointer border ${
+            isAndroidView
+              ? 'bg-[#0B2545] text-white border-[#0B2545] shadow-xs'
+              : 'bg-white dark:bg-[#1A2420] text-institutional-600 dark:text-institutional-400 border-institutional-200 dark:border-institutional-800'
+          }`}
+          title="Toggle between Android PWA mobile layout and Standard Web layout"
+        >
+          {isAndroidView ? (
+            <>
+              <Smartphone className="w-3.5 h-3.5 text-[#22C55E]" />
+              <span>Android PWA View</span>
+            </>
+          ) : (
+            <>
+              <Monitor className="w-3.5 h-3.5 text-institutional-500" />
+              <span>Web View</span>
+            </>
+          )}
+        </button>
+
+        <div className="flex items-center gap-2">
+          <ThemeToggle variant="compact" />
+          <LanguageSelector />
         </div>
+      </div>
 
-        {/* Central Seal & Branding */}
-        <div className="text-center space-y-2.5">
-          <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-govgreen-800 to-govgreen-950 text-white shadow-elevated border border-govgreen-900 animate-logo-reveal">
-            <ShieldCheck className="w-8 h-8 sm:w-9 sm:h-9 text-govgreen-200" />
+      <div className="w-full max-w-md space-y-4 animate-card-entrance">
+        {/* =========================================================================
+            HEADER SECTION:
+            In Android View: ONLY LOGO AND NAME ARE PRESENT (No subtitles, no official bars)
+            In Web View: Full government header with subtitles
+            ========================================================================= */}
+        {isAndroidView ? (
+          /* ANDROID PWA HEADER: ONLY LOGO AND NAME */
+          <div className="text-center py-1">
+            <div className="inline-flex items-center justify-center p-3.5 sm:p-4 rounded-3xl bg-white shadow-elevated border border-institutional-200/80 transition-transform active:scale-98">
+              <img
+                src="/logo-full-transparent.png"
+                alt="Nirikshak-AI"
+                className="w-52 sm:w-60 h-auto object-contain"
+              />
+            </div>
           </div>
-
-          <div>
-            <div className="flex items-center justify-center gap-1.5">
-              <span className="font-extrabold text-2xl sm:text-3xl text-institutional-900 dark:text-white tracking-tight font-display">
-                NIRIKSHAK<span className="text-govgreen-700 dark:text-govgreen-400 font-black ml-1">AI</span>
-              </span>
-              <span className="text-xs font-bold bg-govgreen-50 dark:bg-govgreen-950 text-govgreen-800 dark:text-govgreen-300 border border-govgreen-200/80 dark:border-govgreen-800/80 px-1.5 py-0.5 rounded font-mono">
-                PCR 2011
+        ) : (
+          /* STANDARD WEB HEADER */
+          <div className="text-center space-y-2.5">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <span className="w-2 h-2 rounded-full bg-govgreen-600 dark:bg-govgreen-400 animate-soft-pulse" />
+              <span className="text-[11px] font-mono font-bold text-institutional-500 dark:text-institutional-400 uppercase tracking-wider">
+                OFFICIAL SYSTEM
               </span>
             </div>
-            <p className="text-xs font-semibold text-institutional-600 dark:text-institutional-400 uppercase tracking-wider mt-0.5">
-              {t('brand.fullTitle', 'Legal Metrology Compliance & Inspection Platform')}
-            </p>
-            <p className="text-[11px] text-institutional-500 dark:text-institutional-400 mt-0.5">
-              Government of India • Ministry of Consumer Affairs
-            </p>
+
+            <div className="inline-flex items-center justify-center p-2 rounded-2xl bg-white dark:bg-[#131B17] shadow-elevated border border-institutional-200 dark:border-institutional-800">
+              <img
+                src="/logo-icon.png"
+                alt="Nirikshak-AI"
+                className="w-14 h-14 sm:w-16 sm:h-16 object-contain"
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-center gap-1.5">
+                <span className="font-extrabold text-2xl sm:text-3xl font-display">
+                  <span className="text-[#0B2545] dark:text-white">Nirikshak</span>
+                  <span className="text-[#16A34A] dark:text-[#22C55E] font-black ml-0.5">-AI</span>
+                </span>
+                <span className="text-xs font-bold bg-govgreen-50 dark:bg-govgreen-950 text-govgreen-800 dark:text-govgreen-300 border border-govgreen-200/80 dark:border-govgreen-800/80 px-1.5 py-0.5 rounded font-mono">
+                  PCR 2011
+                </span>
+              </div>
+              <p className="text-xs font-semibold text-institutional-600 dark:text-institutional-400 uppercase tracking-wider mt-0.5">
+                {t('brand.fullTitle', 'Legal Metrology Compliance & Inspection Platform')}
+              </p>
+              <p className="text-[11px] text-institutional-500 dark:text-institutional-400 mt-0.5">
+                Government of India • Ministry of Consumer Affairs
+              </p>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* PWA Install Banner (Visible on Android/Mobile if not already standalone) */}
+        {installPrompt && !isInstalled && (
+          <div className="p-3 rounded-2xl bg-gradient-to-r from-govgreen-900 to-[#0B2545] text-white flex items-center justify-between shadow-md border border-govgreen-700/50 animate-slide-down">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <img
+                src="/logo-icon.png"
+                alt="App Icon"
+                className="w-8 h-8 rounded-lg bg-white p-0.5 shrink-0"
+              />
+              <div className="min-w-0">
+                <div className="text-xs font-bold truncate">Install Nirikshak-AI App</div>
+                <div className="text-[10px] text-govgreen-200 truncate">
+                  Android PWA • Fast &amp; Offline Ready
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleInstallPWA}
+              className="shrink-0 flex items-center gap-1 px-3 py-1.5 bg-[#22C55E] hover:bg-[#16A34A] text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Install</span>
+            </button>
+          </div>
+        )}
 
         {/* Login Card */}
         <div
-          className={`bg-white dark:bg-[#131B17] rounded-2xl border border-institutional-200 dark:border-institutional-800 p-6 sm:p-8 shadow-elevated transition-all duration-200 ${
+          className={`bg-white dark:bg-[#131B17] rounded-3xl border border-institutional-200 dark:border-institutional-800 p-5 sm:p-7 shadow-elevated transition-all duration-200 ${
             hasErrorShake ? 'animate-error-shake ring-2 ring-govred-400' : ''
           }`}
         >
@@ -180,7 +316,7 @@ export const LoginPage: React.FC = () => {
                 <h3 className="text-lg font-bold text-institutional-900 dark:text-white">
                   {confirmedRole === 'OFFICER'
                     ? t('auth.officerVerified', 'Officer Access Verified')
-                    : t('auth.welcomeConsumer', 'Welcome to NIRIKSHAK AI')}
+                    : t('auth.welcomeConsumer', 'Welcome to Nirikshak-AI')}
                 </h3>
                 <p className="text-xs text-institutional-500 dark:text-institutional-400 mt-1">
                   {confirmedRole === 'OFFICER'
@@ -199,14 +335,16 @@ export const LoginPage: React.FC = () => {
           ) : (
             /* Standard Login Form */
             <div className="space-y-4">
-              <div className="border-b border-institutional-100 dark:border-institutional-800 pb-3">
-                <h2 className="text-base sm:text-lg font-bold text-institutional-900 dark:text-white">
-                  {t('auth.unifiedSignIn', 'Authorized Sign In')}
-                </h2>
-                <p className="text-xs text-institutional-500 dark:text-institutional-400 mt-0.5">
-                  Unified access portal for statutory officers and consumer citizens
-                </p>
-              </div>
+              {!isAndroidView && (
+                <div className="border-b border-institutional-100 dark:border-institutional-800 pb-3">
+                  <h2 className="text-base sm:text-lg font-bold text-institutional-900 dark:text-white">
+                    {t('auth.unifiedSignIn', 'Authorized Sign In')}
+                  </h2>
+                  <p className="text-xs text-institutional-500 dark:text-institutional-400 mt-0.5">
+                    Unified access portal for statutory officers and consumer citizens
+                  </p>
+                </div>
+              )}
 
               {errorMessage && (
                 <div className="p-3 rounded-xl bg-govred-50 dark:bg-govred-950/60 border border-govred-200 dark:border-govred-900/60 text-govred-800 dark:text-govred-300 text-xs flex items-start gap-2 animate-slide-down">
@@ -221,7 +359,7 @@ export const LoginPage: React.FC = () => {
                   type="button"
                   onClick={handleGoogleSignIn}
                   disabled={isGoogleLoading || isLoading}
-                  className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-xl border border-institutional-200 dark:border-institutional-800 bg-white dark:bg-[#1A2420] hover:bg-institutional-50 dark:hover:bg-[#202E28] text-institutional-800 dark:text-institutional-200 font-semibold text-xs sm:text-sm shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-govgreen-600 cursor-pointer disabled:opacity-60"
+                  className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-2xl border border-institutional-200 dark:border-institutional-800 bg-white dark:bg-[#1A2420] hover:bg-institutional-50 dark:hover:bg-[#202E28] text-institutional-800 dark:text-institutional-200 font-semibold text-xs sm:text-sm shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-[#16A34A] cursor-pointer disabled:opacity-60"
                   aria-label="Continue with Google"
                 >
                   <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
@@ -243,7 +381,9 @@ export const LoginPage: React.FC = () => {
                     />
                   </svg>
                   <span>
-                    {isGoogleLoading ? t('auth.connectingGoogle', 'Connecting to Google…') : t('auth.continueWithGoogle', 'Continue with Google')}
+                    {isGoogleLoading
+                      ? t('auth.connectingGoogle', 'Connecting to Google…')
+                      : t('auth.continueWithGoogle', 'Continue with Google')}
                   </span>
                 </button>
 
@@ -272,7 +412,7 @@ export const LoginPage: React.FC = () => {
                         if (errorMessage) setErrorMessage(null);
                       }}
                       placeholder="inspector@officer.demo or citizen@gmail.com"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-institutional-200 dark:border-institutional-800 bg-white dark:bg-[#1A2420] text-institutional-900 dark:text-white placeholder:text-institutional-400 focus:outline-none focus:ring-2 focus:ring-govgreen-600 transition-all text-xs sm:text-sm"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-institutional-200 dark:border-institutional-800 bg-white dark:bg-[#1A2420] text-institutional-900 dark:text-white placeholder:text-institutional-400 focus:outline-none focus:ring-2 focus:ring-[#16A34A] transition-all text-xs sm:text-sm"
                       required
                       autoComplete="username"
                     />
@@ -288,7 +428,7 @@ export const LoginPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setShowForgotModal(true)}
-                      className="text-[11px] text-govgreen-700 dark:text-govgreen-400 hover:underline font-semibold cursor-pointer"
+                      className="text-[11px] text-[#16A34A] dark:text-[#22C55E] hover:underline font-semibold cursor-pointer"
                     >
                       {t('auth.forgotPassword', 'Forgot password?')}
                     </button>
@@ -304,7 +444,7 @@ export const LoginPage: React.FC = () => {
                         if (errorMessage) setErrorMessage(null);
                       }}
                       placeholder="••••••••••••"
-                      className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-institutional-200 dark:border-institutional-800 bg-white dark:bg-[#1A2420] text-institutional-900 dark:text-white placeholder:text-institutional-400 focus:outline-none focus:ring-2 focus:ring-govgreen-600 transition-all text-xs sm:text-sm font-mono"
+                      className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-institutional-200 dark:border-institutional-800 bg-white dark:bg-[#1A2420] text-institutional-900 dark:text-white placeholder:text-institutional-400 focus:outline-none focus:ring-2 focus:ring-[#16A34A] transition-all text-xs sm:text-sm font-mono"
                       required
                       autoComplete="current-password"
                     />
@@ -330,7 +470,7 @@ export const LoginPage: React.FC = () => {
                       type="checkbox"
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
-                      className="w-3.5 h-3.5 rounded text-govgreen-800 focus:ring-govgreen-700 border-institutional-300 dark:border-institutional-700 bg-white dark:bg-[#1A2420]"
+                      className="w-3.5 h-3.5 rounded text-[#16A34A] focus:ring-[#16A34A] border-institutional-300 dark:border-institutional-700 bg-white dark:bg-[#1A2420]"
                     />
                     <span className="text-xs text-institutional-600 dark:text-institutional-400 font-medium">
                       {t('auth.rememberMe', 'Remember me')}
@@ -347,11 +487,15 @@ export const LoginPage: React.FC = () => {
                   type="submit"
                   variant="primary"
                   size="lg"
-                  className="w-full min-h-[46px] text-xs sm:text-sm font-bold shadow-subtle mt-2 press-spring justify-center bg-govgreen-800 hover:bg-govgreen-900 text-white rounded-xl"
+                  className="w-full min-h-[46px] text-xs sm:text-sm font-bold shadow-subtle mt-2 press-spring justify-center bg-[#0B2545] hover:bg-[#07192F] text-white rounded-xl cursor-pointer"
                   isLoading={isLoading}
                   rightIcon={!isLoading ? <ArrowRight className="w-4 h-4" /> : undefined}
                 >
-                  {isLoading ? t('auth.verifying', 'Signing In…') : t('auth.signIn', 'Sign In to NIRIKSHAK')}
+                  {isLoading
+                    ? t('auth.verifying', 'Signing In…')
+                    : isAndroidView
+                    ? 'Sign In'
+                    : 'Sign In to Nirikshak-AI'}
                 </Button>
               </form>
 
@@ -366,9 +510,9 @@ export const LoginPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => quickFillDemo('officer')}
-                    className="flex items-center justify-center gap-1.5 p-2 rounded-xl border border-govgreen-200 dark:border-govgreen-800/80 bg-govgreen-50/80 dark:bg-govgreen-950/40 hover:bg-govgreen-100 dark:hover:bg-govgreen-950/70 text-govgreen-900 dark:text-govgreen-300 transition-colors text-xs font-semibold cursor-pointer"
+                    className="flex items-center justify-center gap-1.5 p-2 rounded-xl border border-[#0B2545]/20 dark:border-institutional-700 bg-slate-50 dark:bg-[#1A2420] hover:bg-slate-100 dark:hover:bg-[#202E28] text-[#0B2545] dark:text-slate-200 transition-colors text-xs font-semibold cursor-pointer"
                   >
-                    <UserCheck className="w-3.5 h-3.5 shrink-0 text-govgreen-700 dark:text-govgreen-400" />
+                    <UserCheck className="w-3.5 h-3.5 shrink-0 text-[#16A34A]" />
                     <span className="truncate">Officer Demo</span>
                   </button>
 
@@ -383,10 +527,10 @@ export const LoginPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Institutional Assurance */}
-              <div className="pt-2 text-center">
-                <div className="inline-flex items-center gap-1.5 text-[11px] text-govgreen-800 dark:text-govgreen-300 font-semibold">
-                  <Shield className="w-3.5 h-3.5" />
+              {/* Statutory Notice */}
+              <div className="pt-1 text-center">
+                <div className="inline-flex items-center gap-1.5 text-[10px] text-institutional-500 dark:text-institutional-400 font-medium">
+                  <Shield className="w-3 h-3 text-[#16A34A]" />
                   <span>Statutory Role-Based Access Control</span>
                 </div>
               </div>
@@ -394,9 +538,11 @@ export const LoginPage: React.FC = () => {
           )}
         </div>
 
-        <div className="text-center text-[11px] text-institutional-500 dark:text-institutional-400">
-          Legal Metrology Enforcement System • Built for official field &amp; public vigilance
-        </div>
+        {!isAndroidView && (
+          <div className="text-center text-[11px] text-institutional-500 dark:text-institutional-400">
+            Legal Metrology Enforcement System • Built for official field &amp; public vigilance
+          </div>
+        )}
       </div>
 
       {/* Forgot Password Modal */}
@@ -404,7 +550,7 @@ export const LoginPage: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
           <div className="bg-white dark:bg-[#131B17] rounded-2xl max-w-sm w-full border border-institutional-200 dark:border-institutional-800 shadow-modal p-6 space-y-4 animate-scale-in">
             <div className="w-12 h-12 rounded-2xl bg-govgreen-50 dark:bg-govgreen-950 text-govgreen-800 dark:text-govgreen-300 border border-govgreen-200 dark:border-govgreen-800 flex items-center justify-center mx-auto">
-              <HelpCircle className="w-6 h-6" />
+              <HelpCircle className="w-6 h-6 text-[#16A34A]" />
             </div>
 
             <div className="text-center space-y-1">
@@ -420,7 +566,7 @@ export const LoginPage: React.FC = () => {
               variant="outline"
               size="md"
               onClick={() => setShowForgotModal(false)}
-              className="w-full justify-center text-xs font-bold rounded-xl"
+              className="w-full justify-center text-xs font-bold rounded-xl cursor-pointer"
             >
               Close
             </Button>

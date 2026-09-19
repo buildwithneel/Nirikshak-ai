@@ -1,0 +1,36 @@
+{
+  "name": "Nirikshak-AI — Legal Metrology Inspection",
+  "short_name": "Nirikshak-AI",
+  "description": "Official AI-powered inspection & compliance enforcement platform for packaged commodities under the Legal Metrology (Packaged Commodities) Rules, 2011.",
+  "start_url": "/login",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0B110E",
+  "theme_color": "#0B2545",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["productivity", "utilities", "government"]
+}

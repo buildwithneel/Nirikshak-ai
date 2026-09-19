@@ -132,22 +132,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
             className="flex items-center gap-2.5 overflow-hidden focus:outline-none"
             onClick={() => setIsMobileOpen(false)}
           >
-            <div className="w-9 h-9 rounded-lg bg-govgreen-900 text-white flex items-center justify-center shadow-subtle flex-shrink-0">
-              <Layers className="w-5 h-5 text-white" />
+            <div className="w-9 h-9 rounded-xl bg-white dark:bg-[#15201A] p-0.5 shadow-subtle border border-institutional-200/80 dark:border-institutional-800 flex items-center justify-center shrink-0">
+              <img
+                src="/logo-icon.png"
+                alt="Nirikshak-AI"
+                className="w-full h-full object-contain rounded-lg"
+              />
             </div>
 
             {!isCollapsed && (
               <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-black text-sm tracking-wider text-govink-primary truncate">
-                    {t('brand.name', 'NIRIKSHAK')}
+                  <span className="font-extrabold text-sm tracking-tight text-[#0B2545] dark:text-white truncate font-display">
+                    Nirikshak<span className="text-[#16A34A] dark:text-[#22C55E] font-black ml-0.5">-AI</span>
                   </span>
-                  <span className="text-[9px] font-bold bg-govgreen-100 text-govgreen-900 border border-govgreen-200 px-1 rounded font-mono">
-                    AI
+                  <span className="text-[9px] font-mono font-bold bg-govgreen-50 dark:bg-govgreen-950 text-govgreen-800 dark:text-govgreen-300 px-1 py-0.2 rounded border border-govgreen-200 dark:border-govgreen-800">
+                    PCR
                   </span>
                 </div>
                 <span className="text-[9px] font-bold text-govink-secondary tracking-wider uppercase truncate">
-                  {t('brand.subtitle', 'LEGAL METROLOGY')}
+                  LEGAL METROLOGY
                 </span>
               </div>
             )}
