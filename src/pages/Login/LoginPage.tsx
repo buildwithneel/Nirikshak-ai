@@ -51,13 +51,15 @@ const SafariShareIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-
   </svg>
 );
 
-export type PwaMode = 'ios' | 'android' | 'web';
+import { usePlatform } from '../../hooks/usePlatform';
+import { DEMO_PASSWORDS } from '../../config/demoAccounts';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, loginWithGoogle, isAuthenticated, isOfficer } = useAuth();
   const { t } = useLanguage();
+  const { platform, appMode, isIOS, isAndroid, isStandalone } = usePlatform();
 
   const [email, setEmail] = useState('inspector@officer.demo');
   const [password, setPassword] = useState('Officer@2026!');
@@ -77,11 +79,11 @@ export const LoginPage: React.FC = () => {
   const [isInstalled, setIsInstalled] = useState(false);
   const [isDownloaded, setIsDownloaded] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      const isStandalone =
+      const isStandaloneMode =
         window.matchMedia('(display-mode: standalone)').matches ||
         (window.navigator as any).standalone === true;
       const stored = localStorage.getItem('nirikshak_pwa_downloaded') === 'true';
-      return isStandalone || stored;
+      return isStandaloneMode || stored;
     }
     return false;
   });
@@ -93,34 +95,6 @@ export const LoginPage: React.FC = () => {
       return localStorage.getItem('nirikshak_pwa_installed_at');
     }
     return null;
-  });
-
-  // Device & Platform Detection (Apple iOS, Android, and Desktop Web)
-  const [isRealIOS] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      return (
-        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-      );
-    }
-    return false;
-  });
-
-  const [pwaMode, setPwaMode] = useState<PwaMode>(() => {
-    if (typeof window !== 'undefined') {
-      const isIOS =
-        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      if (isIOS) return 'ios';
-      const isAndroid = /Android/i.test(navigator.userAgent);
-      if (isAndroid) return 'android';
-      const isMobile = window.innerWidth < 768;
-      const isStandalone =
-        window.matchMedia('(display-mode: standalone)').matches ||
-        (window.navigator as any).standalone === true;
-      if (isMobile || isStandalone) return 'ios';
-    }
-    return 'ios';
   });
 
   // Listen for PWA beforeinstallprompt event
@@ -237,8 +211,32 @@ export const LoginPage: React.FC = () => {
       const userRole = response.user.role === 'OFFICER' ? 'OFFICER' : 'USER';
       setConfirmedRole(userRole);
 
-      const destination =
-        (location.state as any)?.from?.pathname || (userRole === 'OFFICER' ? '/dashboard' : '/check');
+      // Safe role-based destination resolution
+      const fromPath = (location.state as any)?.from?.pathname;
+      let destination = userRole === 'OFFICER' ? '/dashboard' : '/check';
+      if (fromPath) {
+        if (userRole === 'OFFICER') {
+          const officerRoutes = [
+            '/dashboard',
+            '/scan',
+            '/inspections',
+            '/complaints',
+            '/products',
+            '/reports',
+            '/rules',
+            '/analytics',
+            '/settings',
+          ];
+          if (officerRoutes.some((r) => fromPath === r || fromPath.startsWith(r + '/'))) {
+            destination = fromPath;
+          }
+        } else {
+          const consumerRoutes = ['/check', '/complaint', '/my-complaints', '/profile'];
+          if (consumerRoutes.some((r) => fromPath === r || fromPath.startsWith(r + '/'))) {
+            destination = fromPath;
+          }
+        }
+      }
 
       setTimeout(() => {
         navigate(destination, { replace: true });
@@ -279,63 +277,18 @@ export const LoginPage: React.FC = () => {
   const quickFillDemo = (type: 'officer' | 'citizen') => {
     if (type === 'officer') {
       setEmail('inspector@officer.demo');
-      setPassword('Officer@2026!');
+      setPassword(DEMO_PASSWORDS.OFFICER);
     } else {
       setEmail('citizen@gmail.com');
-      setPassword('Citizen@2026!');
+      setPassword(DEMO_PASSWORDS.CONSUMER);
     }
     setErrorMessage(null);
   };
 
   return (
     <div className="min-h-screen bg-institutional-50 dark:bg-[#0B110E] flex flex-col justify-center items-center p-3 sm:p-6 bg-grid-pattern selection:bg-govgreen-100 selection:text-govgreen-950 transition-colors duration-200">
-      {/* View Switcher bar (Allows toggling between iOS PWA View, Android PWA View, and Standard Web View) */}
-      <div className="w-full max-w-md flex items-center justify-between mb-3 px-1">
-        {/* Segmented Control: iOS PWA | Android PWA | Web */}
-        <div className="inline-flex p-1 rounded-2xl bg-white/90 dark:bg-[#1A2420] border border-institutional-200 dark:border-institutional-800 shadow-xs">
-          <button
-            type="button"
-            onClick={() => setPwaMode('ios')}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold transition-all cursor-pointer ${
-              pwaMode === 'ios'
-                ? 'bg-[#0B2545] text-white shadow-xs'
-                : 'text-institutional-600 dark:text-institutional-400 hover:text-institutional-900 dark:hover:text-white'
-            }`}
-            title="Apple iOS PWA Mode"
-          >
-            <AppleLogo className="w-3.5 h-3.5 fill-current" />
-            <span>iOS PWA</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setPwaMode('android')}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold transition-all cursor-pointer ${
-              pwaMode === 'android'
-                ? 'bg-[#0B2545] text-white shadow-xs'
-                : 'text-institutional-600 dark:text-institutional-400 hover:text-institutional-900 dark:hover:text-white'
-            }`}
-            title="Android PWA Mode"
-          >
-            <Smartphone className="w-3.5 h-3.5 text-[#22C55E]" />
-            <span>Android PWA</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setPwaMode('web')}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold transition-all cursor-pointer ${
-              pwaMode === 'web'
-                ? 'bg-[#0B2545] text-white shadow-xs'
-                : 'text-institutional-600 dark:text-institutional-400 hover:text-institutional-900 dark:hover:text-white'
-            }`}
-            title="Standard Web Portal"
-          >
-            <Monitor className="w-3.5 h-3.5 text-institutional-500" />
-            <span>Web</span>
-          </button>
-        </div>
-
+      {/* Top Utility Bar (Theme and Language Controls - Manual platform switcher removed) */}
+      <div className="w-full max-w-md flex items-center justify-end mb-3 px-1">
         <div className="flex items-center gap-2">
           <ThemeToggle variant="compact" />
           <LanguageSelector />
@@ -345,11 +298,12 @@ export const LoginPage: React.FC = () => {
       <div className="w-full max-w-md space-y-4 animate-card-entrance">
         {/* =========================================================================
             HEADER SECTION:
-            In iOS PWA View: Sleek Apple App Header + Apple iOS Web App Badge
-            In Android PWA View: Pure App Header + Android PWA WebAPK Badge
-            In Web View: Full government header with national emblems and subtitles
+            Automatically determined by user's platform/environment:
+            - iOS: Sleek Apple App Header + Apple iOS Web App Badge
+            - Android: Pure App Header + Android PWA Badge
+            - Web / Desktop: Full government header with national emblems and subtitles
             ========================================================================= */}
-        {pwaMode === 'ios' ? (
+        {isIOS ? (
           /* APPLE iOS PWA HEADER */
           <div className="text-center py-1 space-y-2">
             <div className="inline-flex items-center justify-center p-3.5 sm:p-4 rounded-3xl bg-white shadow-elevated border border-institutional-200/80 transition-transform active:scale-98">
@@ -363,17 +317,15 @@ export const LoginPage: React.FC = () => {
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/5 dark:bg-white/10 text-slate-700 dark:text-slate-300 text-[10px] font-semibold border border-slate-200 dark:border-slate-800">
                 <AppleLogo className="w-3 h-3 fill-current" />
                 <span>Apple iOS Web App</span>
-                {isInstalled ? (
+                {isStandalone || isDownloaded ? (
                   <span className="text-[#16A34A] font-bold">• Active Standalone</span>
-                ) : isRealIOS ? (
-                  <span className="text-blue-500 dark:text-blue-400 font-medium">• Apple Device Detected</span>
                 ) : (
-                  <span className="text-slate-400">• Standalone Capable</span>
+                  <span className="text-blue-500 dark:text-blue-400 font-medium">• Apple Device Detected</span>
                 )}
               </div>
             </div>
           </div>
-        ) : pwaMode === 'android' ? (
+        ) : isAndroid ? (
           /* ANDROID PWA HEADER */
           <div className="text-center py-1 space-y-2">
             <div className="inline-flex items-center justify-center p-3.5 sm:p-4 rounded-3xl bg-white shadow-elevated border border-institutional-200/80 transition-transform active:scale-98">
@@ -387,16 +339,16 @@ export const LoginPage: React.FC = () => {
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/5 dark:bg-white/10 text-slate-700 dark:text-slate-300 text-[10px] font-mono font-semibold border border-slate-200 dark:border-slate-800">
                 <Smartphone className="w-3 h-3 text-[#22C55E]" />
                 <span>Android PWA</span>
-                {isInstalled ? (
+                {isStandalone || isDownloaded ? (
                   <span className="text-[#16A34A] font-bold">• Installed</span>
                 ) : (
-                  <span className="text-slate-400">• WebAPK Ready</span>
+                  <span className="text-slate-400">• Android Device Detected</span>
                 )}
               </div>
             </div>
           </div>
         ) : (
-          /* STANDARD WEB HEADER */
+          /* STANDARD WEB HEADER (Windows / macOS / Linux Desktop) */
           <div className="text-center space-y-2.5">
             <div className="flex items-center justify-center gap-2 mb-1">
               <span className="w-2 h-2 rounded-full bg-govgreen-600 dark:bg-govgreen-400 animate-soft-pulse" />
@@ -433,8 +385,8 @@ export const LoginPage: React.FC = () => {
           </div>
         )}
 
-        {/* PWA Install Banner: iOS vs Android */}
-        {isInstalled || isDownloaded ? (
+        {/* PWA Install Banner: Automatically tailored to platform */}
+        {isInstalled || isDownloaded || isStandalone ? (
           <div
             onClick={() => setShowAlreadyInstalledDialog(true)}
             className="p-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 flex items-center justify-between shadow-xs cursor-pointer animate-fade-in hover:brightness-95 transition-all"
@@ -443,7 +395,7 @@ export const LoginPage: React.FC = () => {
               <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <div className="min-w-0">
                 <span className="text-xs font-bold truncate block">
-                  {isInstalled ? 'Running in Standalone App Mode' : 'Nirikshak-AI Already Downloaded'}
+                  {isStandalone ? 'Running in Standalone App Mode' : 'Nirikshak-AI Already Downloaded'}
                 </span>
                 <span className="text-[10px] text-emerald-600 dark:text-emerald-400 block truncate">
                   Single device instance active • Ready for field inspections
@@ -457,7 +409,7 @@ export const LoginPage: React.FC = () => {
               View Status
             </button>
           </div>
-        ) : pwaMode === 'ios' ? (
+        ) : isIOS ? (
           /* iOS PWA Add to Home Screen Banner */
           <div className="p-3 rounded-2xl bg-gradient-to-r from-slate-900 via-[#0B2545] to-slate-900 text-white flex items-center justify-between shadow-md border border-slate-700/60 animate-slide-down">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -480,7 +432,7 @@ export const LoginPage: React.FC = () => {
               <span>Install Guide</span>
             </button>
           </div>
-        ) : pwaMode === 'android' ? (
+        ) : isAndroid ? (
           /* Android PWA Install Banner */
           <div className="p-3 rounded-2xl bg-gradient-to-r from-govgreen-900 to-[#0B2545] text-white flex items-center justify-between shadow-md border border-govgreen-700/50 animate-slide-down">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -550,7 +502,7 @@ export const LoginPage: React.FC = () => {
           ) : (
             /* Standard Login Form */
             <div className="space-y-4">
-              {pwaMode === 'web' && (
+              {!isIOS && !isAndroid && (
                 <div className="border-b border-institutional-100 dark:border-institutional-800 pb-3">
                   <h2 className="text-base sm:text-lg font-bold text-institutional-900 dark:text-white">
                     {t('auth.unifiedSignIn', 'Authorized Sign In')}
@@ -708,9 +660,9 @@ export const LoginPage: React.FC = () => {
                 >
                   {isLoading
                     ? t('auth.verifying', 'Signing In…')
-                    : pwaMode === 'ios'
+                    : isIOS
                     ? 'Sign In to iOS App'
-                    : pwaMode === 'android'
+                    : isAndroid
                     ? 'Sign In'
                     : 'Sign In to Nirikshak-AI'}
                 </Button>
@@ -755,7 +707,7 @@ export const LoginPage: React.FC = () => {
           )}
         </div>
 
-        {pwaMode === 'web' && (
+        {!isIOS && !isAndroid && (
           <div className="text-center text-[11px] text-institutional-500 dark:text-institutional-400">
             Legal Metrology Enforcement System • Built for official field &amp; public vigilance
           </div>

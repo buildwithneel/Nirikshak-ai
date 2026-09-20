@@ -59,6 +59,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const currentUser = await authApi.getMe();
             if (currentUser) {
               setUser(currentUser);
+            } else {
+              const email = session.user?.email || 'citizen@gmail.com';
+              const name =
+                session.user?.user_metadata?.full_name ||
+                session.user?.user_metadata?.name ||
+                email.split('@')[0];
+              const googleUser: User = {
+                id: session.user?.id || `usr-google-${Date.now()}`,
+                email,
+                displayName: name,
+                role: 'USER', // Google OAuth strictly defaults to consumer/citizen role
+                createdAt: session.user?.created_at || new Date().toISOString(),
+                lastLoginAt: new Date().toISOString(),
+              };
+              authStorage.setSession(session.access_token, googleUser, true);
+              setUser(googleUser);
             }
           } catch (e) {
             console.warn('Could not sync user with backend:', e);

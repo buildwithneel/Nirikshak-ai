@@ -73,28 +73,14 @@ export const authStorage = {
   },
 };
 
-/**
- * Offline demo fallback accounts in case FastAPI server is unreachable
- */
-const DEMO_OFFICER: User = {
-  id: 'usr-officer-001',
-  email: 'inspector@officer.demo',
-  displayName: 'Insp. R. Varma',
-  role: 'OFFICER',
-  cadreCode: 'LM-DL-2024-881',
-  jurisdiction: 'State Enforcement Directorate, Zone 1',
-  createdAt: '2026-01-15T09:00:00Z',
-  lastLoginAt: new Date().toISOString(),
-};
+import {
+  validateDemoCredentials,
+  DEMO_OFFICER_USER,
+  DEMO_CONSUMER_USER,
+} from '../config/demoAccounts';
 
-const DEMO_CITIZEN: User = {
-  id: 'usr-citizen-002',
-  email: 'citizen@gmail.com',
-  displayName: 'Rahul Sharma',
-  role: 'USER',
-  createdAt: '2026-02-10T14:30:00Z',
-  lastLoginAt: new Date().toISOString(),
-};
+const DEMO_OFFICER: User = DEMO_OFFICER_USER;
+const DEMO_CITIZEN: User = DEMO_CONSUMER_USER;
 
 const DEMO_COMPLAINTS: Complaint[] = [
   {
@@ -144,48 +130,25 @@ export const authApi = {
         return data;
       }
 
-      if (res.status === 401) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || 'Unable to sign in. Check your email and password and try again.');
+      if (res.status === 401 || res.status === 400) {
+        throw new Error('Invalid email address or password.');
       }
     } catch (e: any) {
-      if (e.message && e.message.includes('Unable to sign in')) {
-        throw e;
+      if (e.message && (e.message.includes('Invalid email address or password.') || e.message.includes('Incorrect email address or password.'))) {
+        throw new Error('Invalid email address or password.');
       }
-      console.warn('Backend /api/auth/login unreachable, checking local demo credentials...');
+      console.warn('Backend /api/auth/login unreachable, validating against demo credentials...');
     }
 
-    // Local fallback for offline evaluation
-    const cleanEmail = credentials.email.trim().toLowerCase();
-    if (cleanEmail === 'inspector@officer.demo' && credentials.password) {
-      const mockToken = `demo_officer_token_${Date.now()}`;
-      authStorage.setSession(mockToken, DEMO_OFFICER, credentials.rememberMe);
-      return { access_token: mockToken, token_type: 'bearer', user: DEMO_OFFICER };
+    // Local fallback for offline/demo evaluation
+    const demoResult = validateDemoCredentials(credentials.email, credentials.password);
+    if (demoResult) {
+      const mockToken = `demo_${demoResult.role.toLowerCase()}_token_${Date.now()}`;
+      authStorage.setSession(mockToken, demoResult.user, credentials.rememberMe);
+      return { access_token: mockToken, token_type: 'bearer', user: demoResult.user };
     }
 
-    if (cleanEmail === 'citizen@gmail.com' && credentials.password) {
-      const mockToken = `demo_citizen_token_${Date.now()}`;
-      authStorage.setSession(mockToken, DEMO_CITIZEN, credentials.rememberMe);
-      return { access_token: mockToken, token_type: 'bearer', user: DEMO_CITIZEN };
-    }
-
-    // New consumer demo registration on the fly if valid email
-    if (cleanEmail.includes('@') && credentials.password.length >= 6) {
-      const isOfficerDomain = cleanEmail.endsWith('@officer.demo') || cleanEmail.endsWith('.gov.in');
-      const fallbackUser: User = {
-        id: `usr-${Date.now().toString(16)}`,
-        email: cleanEmail,
-        displayName: cleanEmail.split('@')[0].toUpperCase(),
-        role: isOfficerDomain ? 'OFFICER' : 'USER',
-        createdAt: new Date().toISOString(),
-        lastLoginAt: new Date().toISOString(),
-      };
-      const mockToken = `demo_token_${Date.now()}`;
-      authStorage.setSession(mockToken, fallbackUser, credentials.rememberMe);
-      return { access_token: mockToken, token_type: 'bearer', user: fallbackUser };
-    }
-
-    throw new Error('Unable to sign in. Check your email and password and try again.');
+    throw new Error('Invalid email address or password.');
   },
 
   async logout(): Promise<void> {
@@ -214,8 +177,16 @@ export const authApi = {
       if (res.ok) {
         return await res.json();
       }
+      if (res.status === 401) {
+        // If token was a demo token, maintain local session
+        if (token.startsWith('demo_')) {
+          return authStorage.getUser();
+        }
+        return null;
+      }
     } catch {
-      // Fallback to local cached user
+      // Fallback to local cached user when offline
+      return authStorage.getUser();
     }
     return authStorage.getUser();
   },
