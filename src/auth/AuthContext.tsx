@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole, LoginCredentials, AuthResponse } from './authTypes';
 import { authApi, authStorage } from './authApi';
 import { supabase, signInWithGoogle, signOutSupabase, isSupabaseConfigured } from '../services/supabase/supabaseClient';
+import { formatDisplayNameFromEmail, detectRoleFromEmail } from '../config/demoAccounts';
 
 interface AuthContextType {
   user: User | null;
@@ -15,6 +16,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   hasRole: (role: UserRole | UserRole[]) => boolean;
   clearError: () => void;
+  changePassword: (currentPass: string, newPass: string, confirmPass: string) => { success: boolean; message: string };
   isSupabaseEnabled: boolean;
 }
 
@@ -61,15 +63,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               setUser(currentUser);
             } else {
               const email = session.user?.email || 'citizen@gmail.com';
-              const name =
+              const role = detectRoleFromEmail(email) || 'USER';
+
+              // Prefer real Google profile full_name / name
+              const googleFullName =
                 session.user?.user_metadata?.full_name ||
                 session.user?.user_metadata?.name ||
-                email.split('@')[0];
+                session.user?.user_metadata?.user_name;
+
+              // Fallback: derive sensible human-readable name from local-part of email
+              const displayName = googleFullName || formatDisplayNameFromEmail(email);
+
               const googleUser: User = {
                 id: session.user?.id || `usr-google-${Date.now()}`,
                 email,
-                displayName: name,
-                role: 'USER', // Google OAuth strictly defaults to consumer/citizen role
+                displayName,
+                role, // Google OAuth strictly defaults to consumer/citizen role
                 createdAt: session.user?.created_at || new Date().toISOString(),
                 lastLoginAt: new Date().toISOString(),
               };
@@ -132,6 +141,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const changePassword = (currentPass: string, newPass: string, confirmPass: string) => {
+    return authApi.changePassword(currentPass, newPass, confirmPass);
+  };
+
   const hasRole = (role: UserRole | UserRole[]): boolean => {
     if (!user) return false;
     if (Array.isArray(role)) {
@@ -156,6 +169,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loginWithGoogle,
         logout,
         hasRole,
+        changePassword,
         clearError: () => setError(null),
         isSupabaseEnabled: isSupabaseConfigured(),
       }}

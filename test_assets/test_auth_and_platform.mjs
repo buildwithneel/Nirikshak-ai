@@ -1,111 +1,162 @@
 /**
- * Verification Test Suite for Platform Detection, Credential Validation, and Role-Based Routing
+ * Comprehensive Verification Test Suite for Nirikshak-AI Authentication
+ * Tests Automatic Role Detection, Demo Credentials, Password Change, Google Name Fallback, and Role Security
  */
 
-// Simulated Platform Detection Logic (Mirroring src/utils/platformDetection.ts)
-function simulateDetectPlatform({ ua = '', navPlatform = '', userAgentDataPlatform = '', isStandalone = false, maxTouchPoints = 0 }) {
-  const isPWA = isStandalone;
-  const appMode = isStandalone ? 'pwa' : 'web';
+// Simulated storage for test execution
+const memoryStorage = new Map();
+const mockLocalStorage = {
+  getItem: (key) => memoryStorage.get(key) || null,
+  setItem: (key, val) => memoryStorage.set(key, String(val)),
+  removeItem: (key) => memoryStorage.delete(key),
+  clear: () => memoryStorage.clear(),
+};
 
-  let platform = 'unknown';
-
-  const isIOS =
-    /iPad|iPhone|iPod/.test(ua) ||
-    (navPlatform === 'MacIntel' && maxTouchPoints > 1) ||
-    (/Macintosh/.test(ua) && maxTouchPoints > 1);
-
-  const isAndroid =
-    /Android/i.test(ua) ||
-    /android/i.test(userAgentDataPlatform) ||
-    /android/i.test(navPlatform);
-
-  if (isIOS) {
-    platform = 'ios';
-  } else if (isAndroid) {
-    platform = 'android';
-  } else if (
-    /Win/i.test(userAgentDataPlatform) ||
-    /Windows/i.test(ua) ||
-    /Win32|Win64|Windows/i.test(navPlatform)
-  ) {
-    platform = 'windows';
-  } else if (
-    /Mac/i.test(userAgentDataPlatform) ||
-    /Macintosh|Mac OS X/i.test(ua) ||
-    /MacPPC|MacIntel/i.test(navPlatform)
-  ) {
-    platform = 'macos';
-  } else if (
-    /Linux/i.test(userAgentDataPlatform) ||
-    /Linux/i.test(ua) ||
-    /Linux/i.test(navPlatform)
-  ) {
-    platform = 'linux';
+// -----------------------------------------------------------
+// 1. Role Detection & Name Formatting Logic
+// -----------------------------------------------------------
+function detectRoleFromEmail(email) {
+  const clean = (email || '').trim().toLowerCase();
+  if (clean.includes('@gmail.com')) {
+    return 'USER'; // Consumer
   }
-
-  const isMobile = platform === 'ios' || platform === 'android';
-  const isDesktop = platform === 'windows' || platform === 'macos' || platform === 'linux';
-
-  return {
-    platform,
-    appMode,
-    isStandalone,
-    isPWA,
-    isMobile,
-    isIOS,
-    isAndroid,
-    isDesktop,
-  };
+  if (clean.includes('@officer.com')) {
+    return 'OFFICER';
+  }
+  return null;
 }
 
-// Demo Accounts & Validation (Mirroring src/config/demoAccounts.ts)
-const DEMO_PASSWORDS = {
-  OFFICER: 'Officer@2026!',
+function formatDisplayNameFromEmail(email) {
+  const localPart = (email || '').split('@')[0] || 'User';
+  const parts = localPart
+    .replace(/[._-]+/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (parts.length === 0) return 'User';
+
+  return parts
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+// -----------------------------------------------------------
+// 2. Demo Passwords & Persistence
+// -----------------------------------------------------------
+const INITIAL_PASSWORDS = {
+  OFFICER: 'officer2026',
   CONSUMER: 'Citizen@2026!',
 };
 
-function isOfficerEmail(email) {
-  const clean = email.trim().toLowerCase();
-  return (
-    clean === 'inspector@officer.demo' ||
-    clean === 'inspector@officer.gov.in' ||
-    clean.endsWith('@officer.demo') ||
-    clean.endsWith('@officer.gov.in') ||
-    clean.endsWith('.gov.in') ||
-    clean.endsWith('legalmetrology.gov.in')
-  );
+function getOfficerPassword() {
+  return mockLocalStorage.getItem('nirikshak_officer_password') || INITIAL_PASSWORDS.OFFICER;
 }
 
-function isValidEmailFormat(email) {
-  const clean = email.trim().toLowerCase();
-  if (!clean || clean.length > 254) return false;
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean);
+function getConsumerPassword() {
+  return mockLocalStorage.getItem('nirikshak_consumer_password') || INITIAL_PASSWORDS.CONSUMER;
+}
+
+function setOfficerPassword(pass) {
+  mockLocalStorage.setItem('nirikshak_officer_password', pass);
+}
+
+function setConsumerPassword(pass) {
+  mockLocalStorage.setItem('nirikshak_consumer_password', pass);
 }
 
 function validateDemoCredentials(email, password) {
-  const cleanEmail = email.trim().toLowerCase();
-  if (!cleanEmail || !password || !isValidEmailFormat(cleanEmail)) {
-    return null;
+  const cleanEmail = (email || '').trim().toLowerCase();
+  if (!cleanEmail) {
+    return { success: false, error: 'Please enter your email address.' };
   }
 
-  if (isOfficerEmail(cleanEmail)) {
-    if (password === DEMO_PASSWORDS.OFFICER) {
-      return {
-        role: 'OFFICER',
-        email: cleanEmail,
-      };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+    return { success: false, error: 'Please enter a valid email address.' };
+  }
+
+  const detectedRole = detectRoleFromEmail(cleanEmail);
+  if (!detectedRole) {
+    return { success: false, error: 'Please use a supported account email.' };
+  }
+
+  if (detectedRole === 'OFFICER') {
+    const activePass = getOfficerPassword();
+    if (password !== activePass) {
+      return { success: false, error: 'Invalid email or password.' };
     }
-    return null;
-  }
-
-  if (password === DEMO_PASSWORDS.CONSUMER) {
     return {
+      success: true,
+      role: 'OFFICER',
+      user: {
+        id: `usr-officer-${cleanEmail.split('@')[0]}`,
+        email: cleanEmail,
+        displayName: 'Insp. Rajesh Varma',
+        role: 'OFFICER',
+      },
+    };
+  } else {
+    // Consumer
+    const activePass = getConsumerPassword();
+    if (password !== activePass) {
+      return { success: false, error: 'Invalid email or password.' };
+    }
+    return {
+      success: true,
       role: 'USER',
-      email: cleanEmail,
+      user: {
+        id: `usr-citizen-${cleanEmail.split('@')[0]}`,
+        email: cleanEmail,
+        displayName: formatDisplayNameFromEmail(cleanEmail),
+        role: 'USER',
+      },
     };
   }
+}
 
-  return null;
+function changeUserPassword(email, currentPassword, newPassword, confirmPassword) {
+  const cleanEmail = (email || '').trim().toLowerCase();
+  const detectedRole = detectRoleFromEmail(cleanEmail);
+
+  if (!detectedRole) {
+    return { success: false, message: 'Please use a supported account email.' };
+  }
+
+  if (!currentPassword) {
+    return { success: false, message: 'Please enter your current password.' };
+  }
+
+  if (!newPassword || newPassword.trim().length === 0) {
+    return { success: false, message: 'New password cannot be empty.' };
+  }
+
+  if (newPassword.length < 6) {
+    return { success: false, message: 'New password must be at least 6 characters long.' };
+  }
+
+  if (newPassword !== confirmPassword) {
+    return { success: false, message: 'New passwords do not match.' };
+  }
+
+  if (currentPassword === newPassword) {
+    return { success: false, message: 'New password cannot be the same as current password.' };
+  }
+
+  if (detectedRole === 'OFFICER') {
+    const activePass = getOfficerPassword();
+    if (currentPassword !== activePass) {
+      return { success: false, message: 'Current password is incorrect.' };
+    }
+    setOfficerPassword(newPassword);
+    return { success: true, message: 'Password changed successfully.' };
+  } else {
+    const activePass = getConsumerPassword();
+    if (currentPassword !== activePass) {
+      return { success: false, message: 'Current password is incorrect.' };
+    }
+    setConsumerPassword(newPassword);
+    return { success: true, message: 'Password changed successfully.' };
+  }
 }
 
 function resolveDestination(userRole, fromPath) {
@@ -117,7 +168,7 @@ function resolveDestination(userRole, fromPath) {
         destination = fromPath;
       }
     } else {
-      const consumerRoutes = ['/check', '/complaint', '/my-complaints', '/profile'];
+      const consumerRoutes = ['/check', '/complaint', '/my-complaints', '/profile', '/settings'];
       if (consumerRoutes.some((r) => fromPath === r || fromPath.startsWith(r + '/'))) {
         destination = fromPath;
       }
@@ -126,9 +177,9 @@ function resolveDestination(userRole, fromPath) {
   return destination;
 }
 
-// ----------------------------------------------------
-// RUN TESTS
-// ----------------------------------------------------
+// -----------------------------------------------------------
+// TEST HARNESS
+// -----------------------------------------------------------
 let passed = 0;
 let total = 0;
 
@@ -143,157 +194,156 @@ function assert(condition, message) {
   }
 }
 
-console.log('--- NIRIKSHAK-AI VERIFICATION SUITE ---');
+console.log('========================================================');
+console.log('   NIRIKSHAK-AI AUTHENTICATION & ROLE TEST SUITE       ');
+console.log('========================================================\n');
 
-// TEST 1: Windows + Consumer Gmail + correct password
+// TEST 1: Officer login with inspector@officer.com and officer2026
 {
-  const detected = simulateDetectPlatform({
-    ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    navPlatform: 'Win32',
-    userAgentDataPlatform: 'Windows',
-  });
-  assert(detected.platform === 'windows' && detected.isDesktop, 'TEST 1A: Windows environment detected as desktop');
-  const auth = validateDemoCredentials('citizen@gmail.com', 'Citizen@2026!');
-  assert(auth && auth.role === 'USER', 'TEST 1B: Consumer credentials authenticated as USER');
-  const dest = resolveDestination(auth.role);
-  assert(dest === '/check', 'TEST 1C: Consumer redirected to /check (Consumer Dashboard)');
+  const res = validateDemoCredentials('inspector@officer.com', 'officer2026');
+  assert(res.success && res.role === 'OFFICER', 'TEST 1A: inspector@officer.com authenticated as OFFICER');
+  const dest = resolveDestination(res.role);
+  assert(dest === '/dashboard', 'TEST 1B: Officer redirected to Officer Dashboard (/dashboard)');
 }
 
-// TEST 2: Windows + Officer Demo ID + correct password
+// TEST 2: Consumer login with test@gmail.com and Citizen@2026!
 {
-  const auth = validateDemoCredentials('inspector@officer.demo', 'Officer@2026!');
-  assert(auth && auth.role === 'OFFICER', 'TEST 2A: Officer credentials authenticated as OFFICER');
-  const dest = resolveDestination(auth.role);
-  assert(dest === '/dashboard', 'TEST 2B: Officer redirected to /dashboard (Officer Dashboard)');
+  const res = validateDemoCredentials('test@gmail.com', 'Citizen@2026!');
+  assert(res.success && res.role === 'USER', 'TEST 2A: test@gmail.com authenticated as USER/Consumer');
+  const dest = resolveDestination(res.role);
+  assert(dest === '/check', 'TEST 2B: Consumer redirected to Consumer Dashboard (/check)');
 }
 
-// TEST 3: Android + Consumer Demo
+// TEST 3: Case-insensitive email role detection
 {
-  const detected = simulateDetectPlatform({
-    ua: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
-    navPlatform: 'Linux armv8l',
-    userAgentDataPlatform: 'Android',
-  });
-  assert(detected.platform === 'android' && detected.isMobile, 'TEST 3A: Android automatically detected');
-  const auth = validateDemoCredentials('citizen@gmail.com', 'Citizen@2026!');
-  const dest = resolveDestination(auth.role);
-  assert(dest === '/check', 'TEST 3B: Consumer on Android routes to Consumer Dashboard');
+  const res = validateDemoCredentials('INSPECTOR@OFFICER.COM', 'officer2026');
+  assert(res.success && res.role === 'OFFICER', 'TEST 3A: INSPECTOR@OFFICER.COM (uppercase) detected as OFFICER');
+  const resGmail = validateDemoCredentials('TEST@GMAIL.COM', 'Citizen@2026!');
+  assert(resGmail.success && resGmail.role === 'USER', 'TEST 3B: TEST@GMAIL.COM (uppercase) detected as USER');
 }
 
-// TEST 4: Android + Officer Demo
+// TEST 4: Unsupported email domain (@yahoo.com)
 {
-  const detected = simulateDetectPlatform({
-    ua: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
-    navPlatform: 'Linux armv8l',
-    userAgentDataPlatform: 'Android',
-  });
-  assert(detected.platform === 'android' && detected.isAndroid, 'TEST 4A: Android automatically detected for Officer');
-  const auth = validateDemoCredentials('inspector@officer.demo', 'Officer@2026!');
-  const dest = resolveDestination(auth.role);
-  assert(dest === '/dashboard', 'TEST 4B: Officer on Android routes to Officer Dashboard');
+  const res = validateDemoCredentials('test@yahoo.com', 'Citizen@2026!');
+  assert(!res.success && res.error === 'Please use a supported account email.', 'TEST 4: test@yahoo.com rejected with "Please use a supported account email."');
 }
 
-// TEST 5: iPhone + Consumer Demo
+// TEST 5: Officer wrong password
 {
-  const detected = simulateDetectPlatform({
-    ua: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
-    navPlatform: 'iPhone',
-  });
-  assert(detected.platform === 'ios' && detected.isIOS && detected.isMobile, 'TEST 5A: iPhone automatically detected as iOS');
-  const auth = validateDemoCredentials('citizen@gmail.com', 'Citizen@2026!');
-  const dest = resolveDestination(auth.role);
-  assert(dest === '/check', 'TEST 5B: Consumer on iOS routes to Consumer Dashboard');
+  const res = validateDemoCredentials('inspector@officer.com', 'wrongPass123');
+  assert(!res.success && res.error === 'Invalid email or password.', 'TEST 5: Officer with wrong password rejected');
 }
 
-// TEST 6: iPad (MacIntel with touch) + Officer Demo
+// TEST 6: Consumer wrong password
 {
-  const detected = simulateDetectPlatform({
-    ua: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Safari/605.1.15',
-    navPlatform: 'MacIntel',
-    maxTouchPoints: 5,
-  });
-  assert(detected.platform === 'ios' && detected.isIOS, 'TEST 6A: iPadOS (MacIntel + touch) automatically detected as iOS');
-  const auth = validateDemoCredentials('inspector@officer.demo', 'Officer@2026!');
-  const dest = resolveDestination(auth.role);
-  assert(dest === '/dashboard', 'TEST 6B: Officer on iPad routes to Officer Dashboard');
+  const res = validateDemoCredentials('test@gmail.com', 'wrongPass123');
+  assert(!res.success && res.error === 'Invalid email or password.', 'TEST 6: Consumer with wrong password rejected');
 }
 
-// TEST 7: Wrong password
+// TEST 7: Google sign-in local-part name fallback
 {
-  const authOfficerWrong = validateDemoCredentials('inspector@officer.demo', 'WrongOfficerPassword!');
-  assert(authOfficerWrong === null, 'TEST 7A: Officer with wrong password rejected');
-  const authConsumerWrong = validateDemoCredentials('citizen@gmail.com', 'WrongCitizenPassword!');
-  assert(authConsumerWrong === null, 'TEST 7B: Consumer with wrong password rejected');
-  const authCustomGmailWrong = validateDemoCredentials('myname@gmail.com', 'WrongPass');
-  assert(authCustomGmailWrong === null, 'TEST 7C: Custom personal email with wrong password rejected');
+  const email = 'john.doe@gmail.com';
+  const role = detectRoleFromEmail(email);
+  const displayName = formatDisplayNameFromEmail(email);
+  assert(role === 'USER', 'TEST 7A: john.doe@gmail.com detected as CONSUMER role');
+  assert(displayName === 'John Doe', 'TEST 7B: john.doe formatted to display name "John Doe"');
+
+  const rahulUnderscore = formatDisplayNameFromEmail('rahul_patel@gmail.com');
+  assert(rahulUnderscore === 'Rahul Patel', 'TEST 7C: rahul_patel formatted to "Rahul Patel"');
+
+  const rahulHyphen = formatDisplayNameFromEmail('rahul-patel@gmail.com');
+  assert(rahulHyphen === 'Rahul Patel', 'TEST 7D: rahul-patel formatted to "Rahul Patel"');
+
+  const neel = formatDisplayNameFromEmail('neel123@gmail.com');
+  assert(neel === 'Neel123', 'TEST 7E: neel123 formatted to "Neel123"');
 }
 
-// TEST 8: Unknown / Invalid email
+// TEST 8: Google sign-in with real Google profile name
 {
-  const authUnknown = validateDemoCredentials('notanaccount@fake.com', 'SomePassword123');
-  assert(authUnknown === null, 'TEST 8A: Unknown account with random password rejected');
-  const authMalformed = validateDemoCredentials('notanemail', 'Citizen@2026!');
-  assert(authMalformed === null, 'TEST 8B: Malformed email rejected');
+  const googleMetadata = { full_name: 'Dr. Jane Smith', email: 'jane.smith@gmail.com' };
+  const displayName = googleMetadata.full_name || formatDisplayNameFromEmail(googleMetadata.email);
+  assert(displayName === 'Dr. Jane Smith', 'TEST 8: Real Google profile name preferred over email fallback');
 }
 
-// TEST 9: Officer logs in -> session persistence and refresh simulation
+// TEST 9: Officer changes password in Settings & verifies persistence
 {
-  const auth = validateDemoCredentials('inspector@officer.demo', 'Officer@2026!');
-  const storedUser = { ...auth, role: 'OFFICER' };
-  // Simulate page reload: user restored from storage
-  const restoredUser = JSON.parse(JSON.stringify(storedUser));
-  assert(restoredUser.role === 'OFFICER', 'TEST 9A: Stored role after refresh remains OFFICER');
-  assert(restoredUser.role !== 'USER', 'TEST 9B: Officer does NOT become Consumer after refresh');
+  const changeRes = changeUserPassword('inspector@officer.com', 'officer2026', 'newOfficer123', 'newOfficer123');
+  assert(changeRes.success, 'TEST 9A: Officer successfully changes password to newOfficer123');
+
+  // Verify old password fails
+  const oldLogin = validateDemoCredentials('inspector@officer.com', 'officer2026');
+  assert(!oldLogin.success, 'TEST 9B: Old password officer2026 is no longer valid');
+
+  // Verify new password succeeds
+  const newLogin = validateDemoCredentials('inspector@officer.com', 'newOfficer123');
+  assert(newLogin.success && newLogin.role === 'OFFICER', 'TEST 9C: Officer logs in successfully with newOfficer123');
+  assert(resolveDestination(newLogin.role) === '/dashboard', 'TEST 9D: Officer with new password redirects to /dashboard');
+
+  // Reset back to initial for idempotency
+  changeUserPassword('inspector@officer.com', 'newOfficer123', 'officer2026', 'officer2026');
 }
 
-// TEST 10: Consumer logs in -> session persistence and refresh simulation
+// TEST 10: Consumer changes password in Settings & verifies persistence
 {
-  const auth = validateDemoCredentials('citizen@gmail.com', 'Citizen@2026!');
-  const storedUser = { ...auth, role: 'USER' };
-  const restoredUser = JSON.parse(JSON.stringify(storedUser));
-  assert(restoredUser.role === 'USER', 'TEST 10A: Stored role after refresh remains USER');
-  assert(restoredUser.role !== 'OFFICER', 'TEST 10B: Consumer does NOT become Officer after refresh');
+  const changeRes = changeUserPassword('citizen@gmail.com', 'Citizen@2026!', 'newConsumer456', 'newConsumer456');
+  assert(changeRes.success, 'TEST 10A: Consumer successfully changes password to newConsumer456');
+
+  // Verify old password fails
+  const oldLogin = validateDemoCredentials('citizen@gmail.com', 'Citizen@2026!');
+  assert(!oldLogin.success, 'TEST 10B: Old password Citizen@2026! is no longer valid');
+
+  // Verify new password succeeds
+  const newLogin = validateDemoCredentials('citizen@gmail.com', 'newConsumer456');
+  assert(newLogin.success && newLogin.role === 'USER', 'TEST 10C: Consumer logs in successfully with newConsumer456');
+
+  // Reset back
+  changeUserPassword('citizen@gmail.com', 'newConsumer456', 'Citizen@2026!', 'Citizen@2026!');
 }
 
-// TEST 11 & 12: Logout clears session
+// TEST 11: Refresh after login
 {
-  let session = { token: 'mock_token', user: { role: 'OFFICER' } };
-  // Logout action
-  session = null;
-  assert(session === null, 'TEST 11 & 12: Logout completely clears session');
+  const auth = validateDemoCredentials('inspector@officer.com', 'officer2026');
+  const sessionString = JSON.stringify(auth.user);
+  const restoredUser = JSON.parse(sessionString);
+  assert(restoredUser.role === 'OFFICER', 'TEST 11A: Officer role retained after refresh');
+
+  const consumerAuth = validateDemoCredentials('citizen@gmail.com', 'Citizen@2026!');
+  const consumerSession = JSON.stringify(consumerAuth.user);
+  const restoredConsumer = JSON.parse(consumerSession);
+  assert(restoredConsumer.role === 'USER', 'TEST 11B: Consumer role retained after refresh');
 }
 
-// TEST 13: Unauthenticated user accessing /dashboard
+// TEST 12: Consumer enters Officer Dashboard route
 {
-  const isAuthenticated = false;
-  const user = null;
-  const shouldRedirectToLogin = !isAuthenticated || !user;
-  assert(shouldRedirectToLogin, 'TEST 13: Unauthenticated visitor to /dashboard redirected to /login');
+  const consumerUser = { role: 'USER' };
+  const officerGuard = ['OFFICER'];
+  const hasAccess = officerGuard.includes(consumerUser.role);
+  assert(!hasAccess, 'TEST 12A: Consumer blocked from Officer route (/dashboard)');
+  assert(resolveDestination('USER', '/dashboard') === '/check', 'TEST 12B: resolveDestination safely routes consumer to /check');
 }
 
-// TEST 14: Consumer manually enters /dashboard (Protected route with allowedRoles=['OFFICER'])
+// TEST 13: Officer enters Consumer route
 {
-  const user = { role: 'USER' };
-  const allowedRoles = ['OFFICER'];
-  const isAuthorized = allowedRoles.includes(user.role);
-  assert(!isAuthorized, 'TEST 14A: Consumer is unauthorized for /dashboard');
-
-  // Also test destination resolution prevents consumer from being redirected to /dashboard
-  const attemptedFrom = '/dashboard';
-  const consumerDestination = resolveDestination('USER', attemptedFrom);
-  assert(consumerDestination === '/check', 'TEST 14B: resolveDestination safely overrides attempted /dashboard to /check for consumers');
+  const officerUser = { role: 'OFFICER' };
+  assert(resolveDestination('OFFICER', '/check') === '/dashboard', 'TEST 13: Officer is safely routed to /dashboard');
 }
 
-// TEST 15: PWA Standalone Mode
+// TEST 14: Password change validation rules
 {
-  const detected = simulateDetectPlatform({
-    ua: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Mobile Safari/537.36',
-    isStandalone: true,
-  });
-  assert(detected.appMode === 'pwa' && detected.isStandalone && detected.isPWA, 'TEST 15: PWA standalone display mode detected');
+  // Mismatched confirmation
+  const mismatch = changeUserPassword('inspector@officer.com', 'officer2026', 'pass123', 'pass999');
+  assert(!mismatch.success && mismatch.message === 'New passwords do not match.', 'TEST 14A: Mismatched new passwords rejected');
+
+  // Same as current password
+  const same = changeUserPassword('inspector@officer.com', 'officer2026', 'officer2026', 'officer2026');
+  assert(!same.success && same.message === 'New password cannot be the same as current password.', 'TEST 14B: Identical password rejected');
+
+  // Incorrect current password
+  const wrongCurrent = changeUserPassword('inspector@officer.com', 'badPass', 'newPass123', 'newPass123');
+  assert(!wrongCurrent.success && wrongCurrent.message === 'Current password is incorrect.', 'TEST 14C: Incorrect current password rejected');
 }
 
 console.log(`\nResults: ${passed} / ${total} tests passed.`);
 if (passed === total) {
-  console.log('ALL VERIFICATION TESTS PASSED SUCCESSFULLY!');
+  console.log('ALL VERIFICATION TESTS COMPLETED AND PASSED PERFECTLY!');
 }

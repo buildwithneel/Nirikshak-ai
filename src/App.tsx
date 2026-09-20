@@ -84,7 +84,6 @@ export const App: React.FC = () => {
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/rules" element={<RulesPage />} />
               <Route path="/analytics" element={<AnalyticsPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
             </Route>
 
             {/* Consumer Protected Routes (Consumers + Officers) */}
@@ -96,6 +95,7 @@ export const App: React.FC = () => {
               <Route path="/my-complaints" element={<ConsumerMyComplaintsPage />} />
               <Route path="/my-complaints/:id" element={<ConsumerComplaintDetailPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/settings" element={<SettingsPage />} />
             </Route>
           </Route>
 

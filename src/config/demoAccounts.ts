@@ -1,119 +1,220 @@
 import { User } from '../auth/authTypes';
 
 /**
- * NIRIKSHAK AI — Official Predefined Demo Credentials & Configurations
- * Centralizes credentials for statutory evaluation and citizen testing.
+ * NIRIKSHAK AI — Centralized Demo Credentials, Role Detection & Password Store
+ * Supports automatic role detection:
+ *  - @gmail.com   -> CONSUMER (UserRole: 'USER')
+ *  - @officer.com -> OFFICER  (UserRole: 'OFFICER')
  */
 
-export const DEMO_PASSWORDS = {
-  OFFICER: 'Officer@2026!',
+const STORAGE_KEY_OFFICER_PASS = 'nirikshak_officer_password';
+const STORAGE_KEY_CONSUMER_PASS = 'nirikshak_consumer_password';
+
+export const INITIAL_PASSWORDS = {
+  OFFICER: 'officer2026',
   CONSUMER: 'Citizen@2026!',
 } as const;
 
-export const DEMO_OFFICER_USER: User = {
-  id: 'usr-officer-001',
-  email: 'inspector@officer.demo',
-  displayName: 'Insp. R. Varma',
-  role: 'OFFICER',
-  cadreCode: 'LM-DL-2024-881',
-  jurisdiction: 'State Enforcement Directorate, Zone 1',
-  createdAt: '2026-01-15T09:00:00Z',
-  lastLoginAt: new Date().toISOString(),
-};
-
-export const DEMO_CONSUMER_USER: User = {
-  id: 'usr-citizen-002',
-  email: 'citizen@gmail.com',
-  displayName: 'Rahul Sharma',
-  role: 'USER',
-  createdAt: '2026-02-10T14:30:00Z',
-  lastLoginAt: new Date().toISOString(),
+/**
+ * Retrieve the active Officer password (persisted across reloads and logouts).
+ */
+export const getOfficerPassword = (): string => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem(STORAGE_KEY_OFFICER_PASS) || INITIAL_PASSWORDS.OFFICER;
+  }
+  return INITIAL_PASSWORDS.OFFICER;
 };
 
 /**
- * Validates if the email belongs to an authorized officer or government domain.
+ * Retrieve the active Consumer password (persisted across reloads and logouts).
  */
-export const isOfficerEmail = (email: string): boolean => {
-  const clean = email.trim().toLowerCase();
-  return (
-    clean === 'inspector@officer.demo' ||
-    clean === 'inspector@officer.gov.in' ||
-    clean.endsWith('@officer.demo') ||
-    clean.endsWith('@officer.gov.in') ||
-    clean.endsWith('.gov.in') ||
-    clean.endsWith('legalmetrology.gov.in')
-  );
+export const getConsumerPassword = (): string => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem(STORAGE_KEY_CONSUMER_PASS) || INITIAL_PASSWORDS.CONSUMER;
+  }
+  return INITIAL_PASSWORDS.CONSUMER;
 };
 
 /**
- * Validates standard email address format.
+ * Update the active Officer password in persistent local storage.
  */
-export const isValidEmailFormat = (email: string): boolean => {
-  const clean = email.trim().toLowerCase();
-  if (!clean || clean.length > 254) return false;
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean);
+export const setOfficerPassword = (newPass: string): void => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(STORAGE_KEY_OFFICER_PASS, newPass);
+  }
 };
 
 /**
- * Authenticates credentials against the predefined demo system.
- * Password validation is strictly enforced. Returns user profile or null if invalid.
+ * Update the active Consumer password in persistent local storage.
  */
-export const validateDemoCredentials = (
+export const setConsumerPassword = (newPass: string): void => {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(STORAGE_KEY_CONSUMER_PASS, newPass);
+  }
+};
+
+/**
+ * Automatic role detection from email.
+ * Case-insensitive:
+ *  - Contains @gmail.com   -> 'USER' (CONSUMER)
+ *  - Contains @officer.com -> 'OFFICER'
+ *  - Otherwise            -> null (unsupported)
+ */
+export function detectRoleFromEmail(email: string): 'OFFICER' | 'USER' | null {
+  const clean = (email || '').trim().toLowerCase();
+  if (clean.includes('@gmail.com')) {
+    return 'USER';
+  }
+  if (clean.includes('@officer.com')) {
+    return 'OFFICER';
+  }
+  return null;
+}
+
+/**
+ * Derives a human-friendly display name from an email address (e.g., for Google fallback).
+ * Examples:
+ *  - john.doe@gmail.com    -> John Doe
+ *  - rahul_patel@gmail.com  -> Rahul Patel
+ *  - rahul-patel@gmail.com  -> Rahul Patel
+ *  - neel123@gmail.com      -> Neel123
+ */
+export function formatDisplayNameFromEmail(email: string): string {
+  const localPart = (email || '').split('@')[0] || 'User';
+  const parts = localPart
+    .replace(/[._-]+/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (parts.length === 0) return 'User';
+
+  return parts
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+export type ValidateDemoResult =
+  | { success: true; user: User; role: 'OFFICER' | 'USER' }
+  | { success: false; error: string };
+
+/**
+ * Validates credentials against the single authoritative demo accounts store.
+ */
+export function validateDemoCredentials(
   email: string,
   password: string
-): { user: User; role: 'OFFICER' | 'USER' } | null => {
-  const cleanEmail = email.trim().toLowerCase();
-  if (!cleanEmail || !password || !isValidEmailFormat(cleanEmail)) {
-    return null;
+): ValidateDemoResult {
+  const cleanEmail = (email || '').trim().toLowerCase();
+
+  if (!cleanEmail) {
+    return { success: false, error: 'Please enter your email address.' };
   }
 
-  // 1. Officer Demo Accounts
-  if (isOfficerEmail(cleanEmail)) {
-    if (password === DEMO_PASSWORDS.OFFICER) {
-      if (cleanEmail === 'inspector@officer.demo') {
-        return {
-          user: { ...DEMO_OFFICER_USER, lastLoginAt: new Date().toISOString() },
-          role: 'OFFICER',
-        };
-      }
-      // Authorized government/officer demo user
-      const dynamicOfficer: User = {
-        id: `usr-officer-${cleanEmail.split('@')[0].replace(/[^a-zA-Z0-9]/g, '')}`,
-        email: cleanEmail,
-        displayName: cleanEmail.split('@')[0].toUpperCase(),
-        role: 'OFFICER',
-        cadreCode: 'LM-OFFICIAL',
-        jurisdiction: 'Legal Metrology Enforcement Directorate',
-        createdAt: '2026-01-01T00:00:00Z',
-        lastLoginAt: new Date().toISOString(),
-      };
-      return { user: dynamicOfficer, role: 'OFFICER' };
-    }
-    // Wrong password for officer account
-    return null;
+  // Standard email format validation
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+    return { success: false, error: 'Please enter a valid email address.' };
   }
 
-  // 2. Consumer / Citizen Demo Accounts (e.g. citizen@gmail.com or personal emails)
-  if (password === DEMO_PASSWORDS.CONSUMER) {
-    if (cleanEmail === 'citizen@gmail.com') {
-      return {
-        user: { ...DEMO_CONSUMER_USER, lastLoginAt: new Date().toISOString() },
-        role: 'USER',
-      };
+  const detectedRole = detectRoleFromEmail(cleanEmail);
+  if (!detectedRole) {
+    return { success: false, error: 'Please use a supported account email.' };
+  }
+
+  if (detectedRole === 'OFFICER') {
+    const activePass = getOfficerPassword();
+    if (password !== activePass) {
+      return { success: false, error: 'Invalid email or password.' };
     }
-    const username = cleanEmail.split('@')[0];
-    const formattedName = username.charAt(0).toUpperCase() + username.slice(1);
-    const dynamicConsumer: User = {
-      id: `usr-citizen-${username.replace(/[^a-zA-Z0-9]/g, '')}`,
+    const displayName =
+      cleanEmail === 'inspector@officer.com'
+        ? 'Insp. Rajesh Varma'
+        : formatDisplayNameFromEmail(cleanEmail);
+
+    const officerUser: User = {
+      id: `usr-officer-${cleanEmail.split('@')[0].replace(/[^a-zA-Z0-9]/g, '')}`,
       email: cleanEmail,
-      displayName: formattedName,
-      role: 'USER',
-      createdAt: new Date().toISOString(),
+      displayName,
+      role: 'OFFICER',
+      cadreCode: 'LM-DL-2024-881',
+      jurisdiction: 'State Enforcement Directorate, Zone 1',
+      createdAt: '2026-01-15T09:00:00Z',
       lastLoginAt: new Date().toISOString(),
     };
-    return { user: dynamicConsumer, role: 'USER' };
+    return { success: true, user: officerUser, role: 'OFFICER' };
+  } else {
+    // Consumer
+    const activePass = getConsumerPassword();
+    if (password !== activePass) {
+      return { success: false, error: 'Invalid email or password.' };
+    }
+    const displayName =
+      cleanEmail === 'citizen@gmail.com'
+        ? 'Rahul Sharma'
+        : formatDisplayNameFromEmail(cleanEmail);
+
+    const consumerUser: User = {
+      id: `usr-citizen-${cleanEmail.split('@')[0].replace(/[^a-zA-Z0-9]/g, '')}`,
+      email: cleanEmail,
+      displayName,
+      role: 'USER',
+      createdAt: '2026-02-10T14:30:00Z',
+      lastLoginAt: new Date().toISOString(),
+    };
+    return { success: true, user: consumerUser, role: 'USER' };
+  }
+}
+
+/**
+ * Handles password modification with robust validation.
+ * Persists the new password to local storage so subsequent logins use it.
+ */
+export function changeUserPassword(
+  email: string,
+  currentPassword: string,
+  newPassword: string,
+  confirmPassword: string
+): { success: boolean; message: string } {
+  const cleanEmail = (email || '').trim().toLowerCase();
+  const detectedRole = detectRoleFromEmail(cleanEmail);
+
+  if (!detectedRole) {
+    return { success: false, message: 'Please use a supported account email.' };
   }
 
-  // Password does not match consumer demo password either
-  return null;
-};
+  if (!currentPassword) {
+    return { success: false, message: 'Please enter your current password.' };
+  }
+
+  if (!newPassword || newPassword.trim().length === 0) {
+    return { success: false, message: 'New password cannot be empty.' };
+  }
+
+  if (newPassword.length < 6) {
+    return { success: false, message: 'New password must be at least 6 characters long.' };
+  }
+
+  if (newPassword !== confirmPassword) {
+    return { success: false, message: 'New passwords do not match.' };
+  }
+
+  if (currentPassword === newPassword) {
+    return { success: false, message: 'New password cannot be the same as current password.' };
+  }
+
+  if (detectedRole === 'OFFICER') {
+    const activePass = getOfficerPassword();
+    if (currentPassword !== activePass) {
+      return { success: false, message: 'Current password is incorrect.' };
+    }
+    setOfficerPassword(newPassword);
+    return { success: true, message: 'Password changed successfully.' };
+  } else {
+    const activePass = getConsumerPassword();
+    if (currentPassword !== activePass) {
+      return { success: false, message: 'Current password is incorrect.' };
+    }
+    setConsumerPassword(newPassword);
+    return { success: true, message: 'Password changed successfully.' };
+  }
+}

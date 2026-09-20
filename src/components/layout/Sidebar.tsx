@@ -100,6 +100,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       title: 'ACCOUNT',
       items: [
         { name: 'My Profile', path: '/profile', icon: UserIcon },
+        { name: t('nav.settings', 'Settings'), path: '/settings', icon: Settings },
       ],
     },
   ];

@@ -176,6 +176,28 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
+      {/* Account Security Card */}
+      <div className="bg-white rounded-2xl border border-institutional-border p-6 shadow-subtle flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+          <h3 className="font-bold text-sm text-govink-primary">
+            Account Security &amp; Password
+          </h3>
+          <p className="text-xs text-govink-secondary mt-0.5">
+            Manage your credentials, change password, and configure access settings.
+          </p>
+        </div>
+
+        <Button
+          variant="outline"
+          size="md"
+          onClick={() => navigate('/settings')}
+          leftIcon={<Lock className="w-4 h-4 text-forest-700" />}
+          className="font-bold text-xs flex-shrink-0 w-full sm:w-auto"
+        >
+          Security Settings
+        </Button>
+      </div>
+
       {/* Logout Action Card */}
       <div className="bg-white rounded-2xl border border-institutional-border p-6 shadow-subtle flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>

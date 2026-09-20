@@ -11,11 +11,8 @@ import {
   AlertCircle,
   HelpCircle,
   Sparkles,
-  UserCheck,
   Smartphone,
   Download,
-  Monitor,
-  Share2,
   PlusSquare,
   Check,
   ShieldCheck,
@@ -52,7 +49,6 @@ const SafariShareIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-
 );
 
 import { usePlatform } from '../../hooks/usePlatform';
-import { DEMO_PASSWORDS } from '../../config/demoAccounts';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -61,8 +57,8 @@ export const LoginPage: React.FC = () => {
   const { t } = useLanguage();
   const { platform, appMode, isIOS, isAndroid, isStandalone } = usePlatform();
 
-  const [email, setEmail] = useState('inspector@officer.demo');
-  const [password, setPassword] = useState('Officer@2026!');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -192,8 +188,29 @@ export const LoginPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password) {
-      setErrorMessage(t('auth.missingFields', 'Please enter both email address and password.'));
+    const cleanEmail = email.trim();
+
+    if (!cleanEmail) {
+      setErrorMessage(t('auth.enterEmail', 'Please enter your email address.'));
+      triggerShake();
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setErrorMessage(t('auth.validEmail', 'Please enter a valid email address.'));
+      triggerShake();
+      return;
+    }
+
+    const cleanLower = cleanEmail.toLowerCase();
+    if (!cleanLower.includes('@gmail.com') && !cleanLower.includes('@officer.com')) {
+      setErrorMessage(t('auth.unsupportedDomain', 'Please use a supported account email.'));
+      triggerShake();
+      return;
+    }
+
+    if (!password) {
+      setErrorMessage(t('auth.enterPassword', 'Please enter your password.'));
       triggerShake();
       return;
     }
@@ -203,7 +220,7 @@ export const LoginPage: React.FC = () => {
 
     try {
       const response = await login({
-        email: email.trim(),
+        email: cleanEmail,
         password,
         rememberMe,
       });
@@ -245,7 +262,7 @@ export const LoginPage: React.FC = () => {
       setIsLoading(false);
       setErrorMessage(
         err.message ||
-          t('auth.invalidCredentials', 'Unable to sign in. Check your email and password and try again.')
+          t('auth.invalidCredentials', 'Invalid email or password.')
       );
       triggerShake();
     }
@@ -272,17 +289,6 @@ export const LoginPage: React.FC = () => {
   const triggerShake = () => {
     setHasErrorShake(true);
     setTimeout(() => setHasErrorShake(false), 350);
-  };
-
-  const quickFillDemo = (type: 'officer' | 'citizen') => {
-    if (type === 'officer') {
-      setEmail('inspector@officer.demo');
-      setPassword(DEMO_PASSWORDS.OFFICER);
-    } else {
-      setEmail('citizen@gmail.com');
-      setPassword(DEMO_PASSWORDS.CONSUMER);
-    }
-    setErrorMessage(null);
   };
 
   return (
@@ -578,7 +584,7 @@ export const LoginPage: React.FC = () => {
                         setEmail(e.target.value);
                         if (errorMessage) setErrorMessage(null);
                       }}
-                      placeholder="inspector@officer.demo or citizen@gmail.com"
+                      placeholder="inspector@officer.com or name@gmail.com"
                       className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-institutional-200 dark:border-institutional-800 bg-white dark:bg-[#1A2420] text-institutional-900 dark:text-white placeholder:text-institutional-400 focus:outline-none focus:ring-2 focus:ring-[#16A34A] transition-all text-xs sm:text-sm"
                       required
                       autoComplete="username"
@@ -631,7 +637,7 @@ export const LoginPage: React.FC = () => {
                 </div>
 
                 {/* Remember Me */}
-                <div className="flex items-center justify-between pt-0.5">
+                <div className="flex items-center pt-0.5">
                   <label className="flex items-center gap-2 cursor-pointer select-none">
                     <input
                       type="checkbox"
@@ -643,10 +649,6 @@ export const LoginPage: React.FC = () => {
                       {t('auth.rememberMe', 'Remember me')}
                     </span>
                   </label>
-
-                  <div className="text-[11px] text-institutional-400 font-mono">
-                    Auto-Role Detection
-                  </div>
                 </div>
 
                 {/* Submit Button */}
@@ -668,36 +670,8 @@ export const LoginPage: React.FC = () => {
                 </Button>
               </form>
 
-              {/* Quick Evaluation Demo Chips */}
-              <div className="pt-3 border-t border-institutional-200 dark:border-institutional-800">
-                <div className="flex items-center gap-1.5 text-[10px] font-mono font-bold text-institutional-500 dark:text-institutional-400 uppercase mb-2">
-                  <Sparkles className="w-3 h-3 text-amber-500" />
-                  <span>Quick Evaluation Accounts</span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => quickFillDemo('officer')}
-                    className="flex items-center justify-center gap-1.5 p-2 rounded-xl border border-[#0B2545]/20 dark:border-institutional-700 bg-slate-50 dark:bg-[#1A2420] hover:bg-slate-100 dark:hover:bg-[#202E28] text-[#0B2545] dark:text-slate-200 transition-colors text-xs font-semibold cursor-pointer"
-                  >
-                    <UserCheck className="w-3.5 h-3.5 shrink-0 text-[#16A34A]" />
-                    <span className="truncate">Officer Demo</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => quickFillDemo('citizen')}
-                    className="flex items-center justify-center gap-1.5 p-2 rounded-xl border border-govteal-200 dark:border-govteal-800/80 bg-govteal-50/80 dark:bg-govteal-950/40 hover:bg-govteal-100 dark:hover:bg-govteal-950/70 text-govteal-900 dark:text-govteal-300 transition-colors text-xs font-semibold cursor-pointer"
-                  >
-                    <Smartphone className="w-3.5 h-3.5 shrink-0 text-govteal-600 dark:text-govteal-400" />
-                    <span className="truncate">Consumer Demo</span>
-                  </button>
-                </div>
-              </div>
-
               {/* Statutory Notice */}
-              <div className="pt-1 text-center">
+              <div className="pt-2 border-t border-institutional-100 dark:border-institutional-800/80 text-center">
                 <div className="inline-flex items-center gap-1.5 text-[10px] text-institutional-500 dark:text-institutional-400 font-medium">
                   <Shield className="w-3 h-3 text-[#16A34A]" />
                   <span>Statutory Role-Based Access Control</span>

@@ -75,12 +75,9 @@ export const authStorage = {
 
 import {
   validateDemoCredentials,
-  DEMO_OFFICER_USER,
-  DEMO_CONSUMER_USER,
+  detectRoleFromEmail,
+  changeUserPassword,
 } from '../config/demoAccounts';
-
-const DEMO_OFFICER: User = DEMO_OFFICER_USER;
-const DEMO_CITIZEN: User = DEMO_CONSUMER_USER;
 
 const DEMO_COMPLAINTS: Complaint[] = [
   {
@@ -117,6 +114,14 @@ const DEMO_COMPLAINTS: Complaint[] = [
 
 export const authApi = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
+    const cleanEmail = (credentials.email || '').trim().toLowerCase();
+    
+    // Check supported account domains (@gmail.com for Consumer, @officer.com for Officer)
+    const detectedRole = detectRoleFromEmail(cleanEmail);
+    if (!detectedRole) {
+      throw new Error('Please use a supported account email.');
+    }
+
     try {
       const res = await fetch(getApiUrl('/api/auth/login'), {
         method: 'POST',
@@ -131,24 +136,41 @@ export const authApi = {
       }
 
       if (res.status === 401 || res.status === 400) {
-        throw new Error('Invalid email address or password.');
+        throw new Error('Invalid email or password.');
       }
     } catch (e: any) {
-      if (e.message && (e.message.includes('Invalid email address or password.') || e.message.includes('Incorrect email address or password.'))) {
-        throw new Error('Invalid email address or password.');
+      if (
+        e.message &&
+        (e.message.includes('Invalid email') ||
+          e.message.includes('Incorrect email') ||
+          e.message.includes('supported account email'))
+      ) {
+        throw e;
       }
-      console.warn('Backend /api/auth/login unreachable, validating against demo credentials...');
+      console.warn('Backend /api/auth/login unreachable, validating against demo credentials store...');
     }
 
-    // Local fallback for offline/demo evaluation
+    // Local authoritative evaluation
     const demoResult = validateDemoCredentials(credentials.email, credentials.password);
-    if (demoResult) {
+    if (demoResult.success) {
       const mockToken = `demo_${demoResult.role.toLowerCase()}_token_${Date.now()}`;
       authStorage.setSession(mockToken, demoResult.user, credentials.rememberMe);
       return { access_token: mockToken, token_type: 'bearer', user: demoResult.user };
     }
 
-    throw new Error('Invalid email address or password.');
+    throw new Error(demoResult.error || 'Invalid email or password.');
+  },
+
+  changePassword(
+    currentPass: string,
+    newPass: string,
+    confirmPass: string
+  ): { success: boolean; message: string } {
+    const user = authStorage.getUser();
+    if (!user || !user.email) {
+      return { success: false, message: 'You must be signed in to change your password.' };
+    }
+    return changeUserPassword(user.email, currentPass, newPass, confirmPass);
   },
 
   async logout(): Promise<void> {
