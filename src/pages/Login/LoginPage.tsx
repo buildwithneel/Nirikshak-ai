@@ -18,12 +18,14 @@ import {
   Share2,
   PlusSquare,
   Check,
+  ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { LanguageSelector } from '../../components/common/LanguageSelector';
 import { ThemeToggle } from '../../components/common/ThemeToggle';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { AppAlreadyInstalledModal } from '../../components/common/AppAlreadyInstalledModal';
 
 // SVG Component for Apple Logo
 const AppleLogo: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
@@ -70,10 +72,28 @@ export const LoginPage: React.FC = () => {
   // Post-login role confirmation screen state
   const [confirmedRole, setConfirmedRole] = useState<'OFFICER' | 'USER' | null>(null);
 
-  // PWA Install prompt state
+  // PWA Install prompt & single-download state
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isDownloaded, setIsDownloaded] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const isStandalone =
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as any).standalone === true;
+      const stored = localStorage.getItem('nirikshak_pwa_downloaded') === 'true';
+      return isStandalone || stored;
+    }
+    return false;
+  });
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [showAlreadyInstalledDialog, setShowAlreadyInstalledDialog] = useState(false);
   const [showIosInstallModal, setShowIosInstallModal] = useState(false);
+  const [installedAt, setInstalledAt] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('nirikshak_pwa_installed_at');
+    }
+    return null;
+  });
 
   // Device & Platform Detection (Apple iOS, Android, and Desktop Web)
   const [isRealIOS] = useState<boolean>(() => {
@@ -112,6 +132,13 @@ export const LoginPage: React.FC = () => {
 
     const handleAppInstalled = () => {
       setIsInstalled(true);
+      setIsDownloaded(true);
+      const now = new Date().toISOString();
+      setInstalledAt(now);
+      try {
+        localStorage.setItem('nirikshak_pwa_downloaded', 'true');
+        localStorage.setItem('nirikshak_pwa_installed_at', now);
+      } catch (_) {}
       setInstallPrompt(null);
     };
 
@@ -123,6 +150,7 @@ export const LoginPage: React.FC = () => {
       (window.navigator as any).standalone === true
     ) {
       setIsInstalled(true);
+      setIsDownloaded(true);
     }
 
     return () => {
@@ -132,13 +160,49 @@ export const LoginPage: React.FC = () => {
   }, []);
 
   const handleInstallPWA = async () => {
-    if (!installPrompt) return;
-    installPrompt.prompt();
-    const { outcome } = await installPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setIsInstalled(true);
+    // 1. Check if already installed or downloaded on this device
+    if (isInstalled || isDownloaded) {
+      setShowAlreadyInstalledDialog(true);
+      return;
     }
-    setInstallPrompt(null);
+
+    // 2. Prevent concurrent downloads on multiple fast taps
+    if (isDownloading) return;
+
+    if (!installPrompt) {
+      setShowAlreadyInstalledDialog(true);
+      return;
+    }
+
+    setIsDownloading(true);
+    try {
+      installPrompt.prompt();
+      const { outcome } = await installPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setIsInstalled(true);
+        setIsDownloaded(true);
+        const now = new Date().toISOString();
+        setInstalledAt(now);
+        try {
+          localStorage.setItem('nirikshak_pwa_downloaded', 'true');
+          localStorage.setItem('nirikshak_pwa_installed_at', now);
+        } catch (_) {}
+      }
+      setInstallPrompt(null);
+    } catch (err) {
+      console.warn('Install error:', err);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const resetDownloadTest = () => {
+    try {
+      localStorage.removeItem('nirikshak_pwa_downloaded');
+      localStorage.removeItem('nirikshak_pwa_installed_at');
+    } catch (_) {}
+    setIsDownloaded(false);
+    setInstalledAt(null);
   };
 
   // If already authenticated and visiting /login directly, redirect
@@ -370,10 +434,28 @@ export const LoginPage: React.FC = () => {
         )}
 
         {/* PWA Install Banner: iOS vs Android */}
-        {isInstalled ? (
-          <div className="p-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 flex items-center justify-center gap-2 text-xs font-semibold animate-fade-in">
-            <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>Running in Standalone PWA Mode (Home Screen)</span>
+        {isInstalled || isDownloaded ? (
+          <div
+            onClick={() => setShowAlreadyInstalledDialog(true)}
+            className="p-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 flex items-center justify-between shadow-xs cursor-pointer animate-fade-in hover:brightness-95 transition-all"
+          >
+            <div className="flex items-center gap-2 min-w-0">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <div className="min-w-0">
+                <span className="text-xs font-bold truncate block">
+                  {isInstalled ? 'Running in Standalone App Mode' : 'Nirikshak-AI Already Downloaded'}
+                </span>
+                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 block truncate">
+                  Single device instance active • Ready for field inspections
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-200 shrink-0"
+            >
+              View Status
+            </button>
           </div>
         ) : pwaMode === 'ios' ? (
           /* iOS PWA Add to Home Screen Banner */
@@ -398,8 +480,8 @@ export const LoginPage: React.FC = () => {
               <span>Install Guide</span>
             </button>
           </div>
-        ) : pwaMode === 'android' && installPrompt ? (
-          /* Android PWA Install Banner (beforeinstallprompt available) */
+        ) : pwaMode === 'android' ? (
+          /* Android PWA Install Banner */
           <div className="p-3 rounded-2xl bg-gradient-to-r from-govgreen-900 to-[#0B2545] text-white flex items-center justify-between shadow-md border border-govgreen-700/50 animate-slide-down">
             <div className="flex items-center gap-2.5 min-w-0">
               <img
@@ -417,10 +499,11 @@ export const LoginPage: React.FC = () => {
             <button
               type="button"
               onClick={handleInstallPWA}
-              className="shrink-0 flex items-center gap-1 px-3 py-1.5 bg-[#22C55E] hover:bg-[#16A34A] text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer"
+              disabled={isDownloading}
+              className="shrink-0 flex items-center gap-1 px-3 py-1.5 bg-[#22C55E] hover:bg-[#16A34A] text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer disabled:opacity-60"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Install</span>
+              <span>{isDownloading ? 'Installing…' : 'Install'}</span>
             </button>
           </div>
         ) : null}
@@ -804,6 +887,15 @@ export const LoginPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* App Already Downloaded / Installed Dialogue Box */}
+      <AppAlreadyInstalledModal
+        isOpen={showAlreadyInstalledDialog}
+        onClose={() => setShowAlreadyInstalledDialog(false)}
+        isStandalone={isInstalled}
+        installedAt={installedAt}
+        onReinstallTest={resetDownloadTest}
+      />
     </div>
   );
 };

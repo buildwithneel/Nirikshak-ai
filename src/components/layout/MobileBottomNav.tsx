@@ -167,7 +167,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenDrawer }
           >
             <History className="w-5 h-5 mb-0.5" />
             <span className="text-[10px] leading-tight truncate max-w-[64px]">
-              {t('nav.history', 'History')}
+              {t('nav.historyShort', 'History')}
             </span>
           </NavLink>
 

@@ -61,10 +61,16 @@ export const StatCard: React.FC<StatCardProps> = ({
         : isUp;
 
     const colorClass = isNeutral
-      ? 'text-institutional-500 bg-institutional-100 dark:bg-institutional-800 border-institutional-200 dark:border-institutional-700'
+      ? 'text-institutional-700 dark:text-institutional-300 bg-institutional-100 dark:bg-institutional-800 border-institutional-300 dark:border-institutional-700'
       : isGood
-      ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800/80'
-      : 'text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-950/60 border-red-200 dark:border-red-800/80';
+      ? 'text-emerald-800 dark:text-emerald-200 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800/80'
+      : 'text-red-800 dark:text-red-200 bg-red-50 dark:bg-red-950/60 border-red-300 dark:border-red-800/80';
+
+    const labelColorClass = isNeutral
+      ? 'text-institutional-700 dark:text-institutional-300'
+      : isGood
+      ? 'text-emerald-800 dark:text-emerald-300'
+      : 'text-red-800 dark:text-red-300';
 
     return (
       <div
@@ -79,7 +85,7 @@ export const StatCard: React.FC<StatCardProps> = ({
         )}
         <span className="tabular-nums">{Math.abs(trend.value)}%</span>
         {trend.label && (
-          <span className="text-institutional-400 font-normal ml-0.5 hidden sm:inline">
+          <span className={`${labelColorClass} font-semibold ml-1 hidden sm:inline`}>
             {trend.label}
           </span>
         )}

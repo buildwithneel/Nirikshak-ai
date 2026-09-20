@@ -10,12 +10,17 @@ import {
   Type,
   Layers,
   Inbox,
+  Download,
+  ShieldCheck,
+  Smartphone,
 } from 'lucide-react';
 import { StatCard } from '../../components/ui/StatCard';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
 import { PageTransition } from '../../components/motion/PageTransition';
+import { usePwaInstall } from '../../hooks/usePwaInstall';
+import { AppAlreadyInstalledModal } from '../../components/common/AppAlreadyInstalledModal';
 import {
   mockComplianceByCategory,
   mockViolationCategories,
@@ -38,6 +43,16 @@ export const DashboardPage: React.FC = () => {
     recently_submitted_complaints: [],
     recently_updated: [],
   });
+
+  const {
+    isInstalled,
+    isDownloaded,
+    triggerDownloadOrInstall,
+    showAlreadyInstalledDialog,
+    setShowAlreadyInstalledDialog,
+    installedAt,
+    markAsUninstalledForTesting,
+  } = usePwaInstall();
 
   useEffect(() => {
     dashboardApi.getStats()
@@ -74,6 +89,28 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
+          {/* Download App / PWA Button on Dashboard */}
+          <Button
+            variant="outline"
+            size="md"
+            onClick={triggerDownloadOrInstall}
+            leftIcon={
+              isDownloaded ? (
+                <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              ) : (
+                <Download className="w-4 h-4 text-[#16A34A]" />
+              )
+            }
+            className={`rounded-xl transition-all cursor-pointer ${
+              isDownloaded
+                ? 'border-emerald-300 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-300 font-bold'
+                : 'border-institutional-300 dark:border-institutional-700 hover:border-[#16A34A] text-[#0B2545] dark:text-white font-bold'
+            }`}
+            title={isDownloaded ? 'Nirikshak-AI is already downloaded on this device' : 'Download and install Nirikshak-AI for offline mobile inspections'}
+          >
+            {isDownloaded ? 'App Downloaded' : 'Download App'}
+          </Button>
+
           <Button
             variant="outline"
             size="md"
@@ -229,6 +266,56 @@ export const DashboardPage: React.FC = () => {
             <div className="text-[11px] text-institutional-600 dark:text-institutional-400 mt-1 tabular-nums">{reportsGeneratedCount} Legal Metrology PDFs</div>
           </div>
         </div>
+      </div>
+
+      {/* PWA Download & Single-Instance Active Banner */}
+      <div className="bg-gradient-to-r from-[#0B2545] via-[#0F3661] to-[#14532D] rounded-2xl p-4 sm:p-5 text-white shadow-elevated flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-page-enter">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-white/10 backdrop-blur-md p-2 flex items-center justify-center shrink-0 border border-white/20 shadow-xs">
+            {isDownloaded ? (
+              <ShieldCheck className="w-6 h-6 text-[#22C55E]" />
+            ) : (
+              <Download className="w-6 h-6 text-[#22C55E]" />
+            )}
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-bold text-sm sm:text-base">
+                {isDownloaded ? 'Nirikshak-AI Installed on this Device' : 'Download Nirikshak-AI Mobile App'}
+              </span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/15 border border-white/20 text-white/90">
+                {isDownloaded ? 'Single-Instance Active' : 'Offline PWA Ready'}
+              </span>
+            </div>
+            <p className="text-xs text-white/80 mt-1 max-w-xl leading-relaxed">
+              {isDownloaded
+                ? 'Nirikshak-AI is registered as a single instance on this device. Offline field OCR and Legal Metrology Rule 6 engine are ready.'
+                : 'Download Nirikshak-AI to your phone or desktop for rapid offline field inspections, camera OCR, and instant reports.'}
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={triggerDownloadOrInstall}
+          className={`shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs ${
+            isDownloaded
+              ? 'bg-white/15 hover:bg-white/25 text-white border border-white/25'
+              : 'bg-[#22C55E] hover:bg-[#16A34A] text-white'
+          }`}
+        >
+          {isDownloaded ? (
+            <>
+              <ShieldCheck className="w-4 h-4 text-[#22C55E]" />
+              <span>Installed (View Status)</span>
+            </>
+          ) : (
+            <>
+              <Download className="w-4 h-4" />
+              <span>Download App</span>
+            </>
+          )}
+        </button>
       </div>
 
       {/* Real Officer Work Queue */}
@@ -504,8 +591,44 @@ export const DashboardPage: React.FC = () => {
               </Link>
             }
           >
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+            {/* Mobile Cards View (<sm screens) - Prevents squished columns seen in user screenshot */}
+            <div className="block sm:hidden divide-y divide-institutional-100 dark:divide-institutional-800/80">
+              {mockRecentInspections.map((rec) => (
+                <div
+                  key={rec.id}
+                  onClick={() => navigate(rec.id === 'LM-2026-001284' ? '/scan/result' : `/inspections/${rec.id}`)}
+                  className="py-3.5 space-y-2 cursor-pointer active:bg-institutional-50 dark:active:bg-[#1A2420] transition-colors"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono font-bold text-xs text-govgreen-700 dark:text-govgreen-400 tabular-nums">
+                      {rec.id}
+                    </span>
+                    <StatusBadge status={rec.status as any} size="sm" />
+                  </div>
+
+                  <div>
+                    <div className="font-bold text-sm text-institutional-900 dark:text-white leading-snug">
+                      {rec.productName}
+                    </div>
+                    <div className="text-xs text-institutional-600 dark:text-institutional-300 font-medium mt-0.5">
+                      {rec.brand} • {rec.category}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-institutional-500 dark:text-institutional-400 pt-1">
+                    <span className="font-mono text-[11px] tabular-nums">{rec.date}</span>
+                    <div className="flex items-center gap-1 font-mono text-xs font-bold text-institutional-900 dark:text-white bg-institutional-100 dark:bg-[#1C2721] px-2 py-0.5 rounded-lg border border-institutional-200 dark:border-institutional-800 tabular-nums">
+                      <span>Score:</span>
+                      <span className="text-govgreen-700 dark:text-govgreen-400">{rec.score}/100</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table View (>=sm screens) */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-left text-xs min-w-[580px]">
                 <thead>
                   <tr className="border-b border-institutional-200 dark:border-institutional-800 text-institutional-500 dark:text-institutional-400 uppercase tracking-wider font-mono">
                     <th className="pb-3 font-bold">Inspection ID</th>
@@ -527,9 +650,9 @@ export const DashboardPage: React.FC = () => {
                       </td>
                       <td className="py-3">
                         <div className="font-bold text-institutional-900 dark:text-white">{rec.productName}</div>
-                        <div className="text-[10px] text-institutional-400">{rec.brand} • {rec.category}</div>
+                        <div className="text-[11px] text-institutional-600 dark:text-institutional-300 font-medium">{rec.brand} • {rec.category}</div>
                       </td>
-                      <td className="py-3 text-institutional-500 dark:text-institutional-400 font-mono tabular-nums">
+                      <td className="py-3 text-institutional-600 dark:text-institutional-300 font-mono tabular-nums whitespace-nowrap">
                         {rec.date}
                       </td>
                       <td className="py-3">
@@ -575,6 +698,15 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* App Already Downloaded / Installed Dialogue Box */}
+      <AppAlreadyInstalledModal
+        isOpen={showAlreadyInstalledDialog}
+        onClose={() => setShowAlreadyInstalledDialog(false)}
+        isStandalone={isInstalled}
+        installedAt={installedAt}
+        onReinstallTest={markAsUninstalledForTesting}
+      />
     </PageTransition>
   );
 };
