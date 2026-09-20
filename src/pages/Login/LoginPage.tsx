@@ -15,12 +15,41 @@ import {
   Smartphone,
   Download,
   Monitor,
+  Share2,
+  PlusSquare,
+  Check,
 } from 'lucide-react';
 import { useAuth } from '../../auth/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { LanguageSelector } from '../../components/common/LanguageSelector';
 import { ThemeToggle } from '../../components/common/ThemeToggle';
 import { useLanguage } from '../../i18n/LanguageContext';
+
+// SVG Component for Apple Logo
+const AppleLogo: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg className={className} viewBox="0 0 170 170" fill="currentColor">
+    <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.7-3.04-7.59-7.71-11.66-14-4.88-7.5-8.94-16.14-12.18-25.92-3.23-9.78-4.86-19.46-4.86-29.04 0-14.33 3.65-26.15 10.96-35.47 7.31-9.31 16.5-14.07 27.57-14.28 5.75 0 11.95 1.63 18.6 4.9 6.64 3.26 10.84 4.96 12.6 5.09 1.52-.13 5.92-1.88 13.2-5.26 7.29-3.37 13.43-4.89 18.42-4.56 10.1.65 18.57 4.54 25.42 11.68 6.85 7.13 11.08 15.42 12.7 24.86-8.91 5.38-13.3 12.87-13.16 22.47.14 8.78 3.58 16.18 10.32 22.21 4.56 4.09 9.87 6.94 15.93 8.56-1.52 4.45-3.37 9.17-5.54 14.16zM119.22 31.84c0-7.39 2.65-14.34 7.96-20.85 5.3-6.52 11.83-10.63 19.58-12.33 1.09 7.07.13 14.1-2.88 21.09-3.01 6.99-7.59 12.44-13.74 16.36-2.93 1.95-6.52 3.26-10.77 3.91-.07-2.71-.15-5.43-.15-8.18z" />
+  </svg>
+);
+
+// SVG Component for Apple Safari Share Icon
+const SafariShareIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+    <polyline points="16 6 12 2 8 6" />
+    <line x1="12" y1="2" x2="12" y2="15" />
+  </svg>
+);
+
+export type PwaMode = 'ios' | 'android' | 'web';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -44,18 +73,34 @@ export const LoginPage: React.FC = () => {
   // PWA Install prompt state
   const [installPrompt, setInstallPrompt] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [showIosInstallModal, setShowIosInstallModal] = useState(false);
 
-  // Android Mode detection (default to true on mobile/Android/PWA, can be toggled for desktop testing)
-  const [isAndroidView, setIsAndroidView] = useState<boolean>(() => {
+  // Device & Platform Detection (Apple iOS, Android, and Desktop Web)
+  const [isRealIOS] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
-      const isMobile = window.innerWidth < 768;
+      return (
+        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+      );
+    }
+    return false;
+  });
+
+  const [pwaMode, setPwaMode] = useState<PwaMode>(() => {
+    if (typeof window !== 'undefined') {
+      const isIOS =
+        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (isIOS) return 'ios';
       const isAndroid = /Android/i.test(navigator.userAgent);
+      if (isAndroid) return 'android';
+      const isMobile = window.innerWidth < 768;
       const isStandalone =
         window.matchMedia('(display-mode: standalone)').matches ||
         (window.navigator as any).standalone === true;
-      return isMobile || isAndroid || isStandalone;
+      if (isMobile || isStandalone) return 'ios';
     }
-    return false;
+    return 'ios';
   });
 
   // Listen for PWA beforeinstallprompt event
@@ -180,30 +225,52 @@ export const LoginPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-institutional-50 dark:bg-[#0B110E] flex flex-col justify-center items-center p-3 sm:p-6 bg-grid-pattern selection:bg-govgreen-100 selection:text-govgreen-950 transition-colors duration-200">
-      {/* View Switcher bar (Allows toggling between Android PWA View and Standard Web View) */}
+      {/* View Switcher bar (Allows toggling between iOS PWA View, Android PWA View, and Standard Web View) */}
       <div className="w-full max-w-md flex items-center justify-between mb-3 px-1">
-        <button
-          type="button"
-          onClick={() => setIsAndroidView(!isAndroidView)}
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono font-bold transition-all cursor-pointer border ${
-            isAndroidView
-              ? 'bg-[#0B2545] text-white border-[#0B2545] shadow-xs'
-              : 'bg-white dark:bg-[#1A2420] text-institutional-600 dark:text-institutional-400 border-institutional-200 dark:border-institutional-800'
-          }`}
-          title="Toggle between Android PWA mobile layout and Standard Web layout"
-        >
-          {isAndroidView ? (
-            <>
-              <Smartphone className="w-3.5 h-3.5 text-[#22C55E]" />
-              <span>Android PWA View</span>
-            </>
-          ) : (
-            <>
-              <Monitor className="w-3.5 h-3.5 text-institutional-500" />
-              <span>Web View</span>
-            </>
-          )}
-        </button>
+        {/* Segmented Control: iOS PWA | Android PWA | Web */}
+        <div className="inline-flex p-1 rounded-2xl bg-white/90 dark:bg-[#1A2420] border border-institutional-200 dark:border-institutional-800 shadow-xs">
+          <button
+            type="button"
+            onClick={() => setPwaMode('ios')}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold transition-all cursor-pointer ${
+              pwaMode === 'ios'
+                ? 'bg-[#0B2545] text-white shadow-xs'
+                : 'text-institutional-600 dark:text-institutional-400 hover:text-institutional-900 dark:hover:text-white'
+            }`}
+            title="Apple iOS PWA Mode"
+          >
+            <AppleLogo className="w-3.5 h-3.5 fill-current" />
+            <span>iOS PWA</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setPwaMode('android')}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold transition-all cursor-pointer ${
+              pwaMode === 'android'
+                ? 'bg-[#0B2545] text-white shadow-xs'
+                : 'text-institutional-600 dark:text-institutional-400 hover:text-institutional-900 dark:hover:text-white'
+            }`}
+            title="Android PWA Mode"
+          >
+            <Smartphone className="w-3.5 h-3.5 text-[#22C55E]" />
+            <span>Android PWA</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setPwaMode('web')}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold transition-all cursor-pointer ${
+              pwaMode === 'web'
+                ? 'bg-[#0B2545] text-white shadow-xs'
+                : 'text-institutional-600 dark:text-institutional-400 hover:text-institutional-900 dark:hover:text-white'
+            }`}
+            title="Standard Web Portal"
+          >
+            <Monitor className="w-3.5 h-3.5 text-institutional-500" />
+            <span>Web</span>
+          </button>
+        </div>
 
         <div className="flex items-center gap-2">
           <ThemeToggle variant="compact" />
@@ -214,18 +281,54 @@ export const LoginPage: React.FC = () => {
       <div className="w-full max-w-md space-y-4 animate-card-entrance">
         {/* =========================================================================
             HEADER SECTION:
-            In Android View: ONLY LOGO AND NAME ARE PRESENT (No subtitles, no official bars)
-            In Web View: Full government header with subtitles
+            In iOS PWA View: Sleek Apple App Header + Apple iOS Web App Badge
+            In Android PWA View: Pure App Header + Android PWA WebAPK Badge
+            In Web View: Full government header with national emblems and subtitles
             ========================================================================= */}
-        {isAndroidView ? (
-          /* ANDROID PWA HEADER: ONLY LOGO AND NAME */
-          <div className="text-center py-1">
+        {pwaMode === 'ios' ? (
+          /* APPLE iOS PWA HEADER */
+          <div className="text-center py-1 space-y-2">
             <div className="inline-flex items-center justify-center p-3.5 sm:p-4 rounded-3xl bg-white shadow-elevated border border-institutional-200/80 transition-transform active:scale-98">
               <img
                 src="/logo-full-transparent.png"
                 alt="Nirikshak-AI"
                 className="w-52 sm:w-60 h-auto object-contain"
               />
+            </div>
+            <div className="flex items-center justify-center gap-1.5">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/5 dark:bg-white/10 text-slate-700 dark:text-slate-300 text-[10px] font-semibold border border-slate-200 dark:border-slate-800">
+                <AppleLogo className="w-3 h-3 fill-current" />
+                <span>Apple iOS Web App</span>
+                {isInstalled ? (
+                  <span className="text-[#16A34A] font-bold">• Active Standalone</span>
+                ) : isRealIOS ? (
+                  <span className="text-blue-500 dark:text-blue-400 font-medium">• Apple Device Detected</span>
+                ) : (
+                  <span className="text-slate-400">• Standalone Capable</span>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : pwaMode === 'android' ? (
+          /* ANDROID PWA HEADER */
+          <div className="text-center py-1 space-y-2">
+            <div className="inline-flex items-center justify-center p-3.5 sm:p-4 rounded-3xl bg-white shadow-elevated border border-institutional-200/80 transition-transform active:scale-98">
+              <img
+                src="/logo-full-transparent.png"
+                alt="Nirikshak-AI"
+                className="w-52 sm:w-60 h-auto object-contain"
+              />
+            </div>
+            <div className="flex items-center justify-center gap-1.5">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/5 dark:bg-white/10 text-slate-700 dark:text-slate-300 text-[10px] font-mono font-semibold border border-slate-200 dark:border-slate-800">
+                <Smartphone className="w-3 h-3 text-[#22C55E]" />
+                <span>Android PWA</span>
+                {isInstalled ? (
+                  <span className="text-[#16A34A] font-bold">• Installed</span>
+                ) : (
+                  <span className="text-slate-400">• WebAPK Ready</span>
+                )}
+              </div>
             </div>
           </div>
         ) : (
@@ -266,8 +369,37 @@ export const LoginPage: React.FC = () => {
           </div>
         )}
 
-        {/* PWA Install Banner (Visible on Android/Mobile if not already standalone) */}
-        {installPrompt && !isInstalled && (
+        {/* PWA Install Banner: iOS vs Android */}
+        {isInstalled ? (
+          <div className="p-2.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 flex items-center justify-center gap-2 text-xs font-semibold animate-fade-in">
+            <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span>Running in Standalone PWA Mode (Home Screen)</span>
+          </div>
+        ) : pwaMode === 'ios' ? (
+          /* iOS PWA Add to Home Screen Banner */
+          <div className="p-3 rounded-2xl bg-gradient-to-r from-slate-900 via-[#0B2545] to-slate-900 text-white flex items-center justify-between shadow-md border border-slate-700/60 animate-slide-down">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-white p-1 flex items-center justify-center shrink-0 shadow-xs">
+                <AppleLogo className="w-5 h-5 fill-slate-900" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-bold truncate">Install Nirikshak-AI on iOS</div>
+                <div className="text-[10px] text-slate-300 truncate">
+                  Tap Safari Share &amp; Add to Home Screen
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowIosInstallModal(true)}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-900 rounded-xl text-xs font-bold shadow-xs cursor-pointer transition-colors"
+            >
+              <SafariShareIcon className="w-3.5 h-3.5 text-blue-600" />
+              <span>Install Guide</span>
+            </button>
+          </div>
+        ) : pwaMode === 'android' && installPrompt ? (
+          /* Android PWA Install Banner (beforeinstallprompt available) */
           <div className="p-3 rounded-2xl bg-gradient-to-r from-govgreen-900 to-[#0B2545] text-white flex items-center justify-between shadow-md border border-govgreen-700/50 animate-slide-down">
             <div className="flex items-center gap-2.5 min-w-0">
               <img
@@ -291,7 +423,7 @@ export const LoginPage: React.FC = () => {
               <span>Install</span>
             </button>
           </div>
-        )}
+        ) : null}
 
         {/* Login Card */}
         <div
@@ -335,7 +467,7 @@ export const LoginPage: React.FC = () => {
           ) : (
             /* Standard Login Form */
             <div className="space-y-4">
-              {!isAndroidView && (
+              {pwaMode === 'web' && (
                 <div className="border-b border-institutional-100 dark:border-institutional-800 pb-3">
                   <h2 className="text-base sm:text-lg font-bold text-institutional-900 dark:text-white">
                     {t('auth.unifiedSignIn', 'Authorized Sign In')}
@@ -493,7 +625,9 @@ export const LoginPage: React.FC = () => {
                 >
                   {isLoading
                     ? t('auth.verifying', 'Signing In…')
-                    : isAndroidView
+                    : pwaMode === 'ios'
+                    ? 'Sign In to iOS App'
+                    : pwaMode === 'android'
                     ? 'Sign In'
                     : 'Sign In to Nirikshak-AI'}
                 </Button>
@@ -538,12 +672,109 @@ export const LoginPage: React.FC = () => {
           )}
         </div>
 
-        {!isAndroidView && (
+        {pwaMode === 'web' && (
           <div className="text-center text-[11px] text-institutional-500 dark:text-institutional-400">
             Legal Metrology Enforcement System • Built for official field &amp; public vigilance
           </div>
         )}
       </div>
+
+      {/* iOS PWA Add to Home Screen Guidance Modal */}
+      {showIosInstallModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-[#131B17] rounded-3xl max-w-md w-full border border-institutional-200 dark:border-institutional-800 shadow-modal p-5 sm:p-6 space-y-4 animate-slide-up sm:animate-scale-in">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-institutional-100 dark:border-institutional-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-black dark:bg-white text-white dark:text-black flex items-center justify-center shadow-xs">
+                  <AppleLogo className="w-5 h-5 fill-current" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm sm:text-base text-institutional-900 dark:text-white">
+                    Install Nirikshak-AI on iOS
+                  </h3>
+                  <p className="text-[11px] text-institutional-500 dark:text-institutional-400">
+                    Apple iPhone &amp; iPad Home Screen Setup
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowIosInstallModal(false)}
+                className="p-1 rounded-full text-institutional-400 hover:text-institutional-700 dark:hover:text-institutional-200 transition-colors cursor-pointer"
+                aria-label="Close"
+              >
+                <span className="text-xl leading-none font-bold">&times;</span>
+              </button>
+            </div>
+
+            {/* Step-by-Step Apple Safari Guide */}
+            <div className="space-y-3 pt-1">
+              <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-[#1A2420] border border-slate-200/80 dark:border-slate-800">
+                <div className="w-7 h-7 rounded-xl bg-blue-500 text-white flex items-center justify-center shrink-0 font-bold text-xs">
+                  1
+                </div>
+                <div className="min-w-0 space-y-0.5">
+                  <div className="text-xs font-bold text-institutional-900 dark:text-white flex items-center gap-1.5">
+                    <span>Tap Safari Share button</span>
+                    <SafariShareIcon className="w-4 h-4 text-blue-500 shrink-0" />
+                  </div>
+                  <p className="text-[11px] text-institutional-600 dark:text-institutional-400">
+                    In Safari toolbar (bottom on iPhone, top on iPad), tap the Share icon.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-[#1A2420] border border-slate-200/80 dark:border-slate-800">
+                <div className="w-7 h-7 rounded-xl bg-[#0B2545] dark:bg-white dark:text-[#0B2545] text-white flex items-center justify-center shrink-0 font-bold text-xs">
+                  2
+                </div>
+                <div className="min-w-0 space-y-0.5">
+                  <div className="text-xs font-bold text-institutional-900 dark:text-white flex items-center gap-1.5">
+                    <span>Select &ldquo;Add to Home Screen&rdquo;</span>
+                    <PlusSquare className="w-4 h-4 text-[#16A34A] shrink-0" />
+                  </div>
+                  <p className="text-[11px] text-institutional-600 dark:text-institutional-400">
+                    Scroll down through the share options and tap <strong>Add to Home Screen</strong>.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-[#1A2420] border border-slate-200/80 dark:border-slate-800">
+                <div className="w-7 h-7 rounded-xl bg-[#16A34A] text-white flex items-center justify-center shrink-0 font-bold text-xs">
+                  3
+                </div>
+                <div className="min-w-0 space-y-0.5">
+                  <div className="text-xs font-bold text-institutional-900 dark:text-white flex items-center gap-1.5">
+                    <span>Tap &ldquo;Add&rdquo; in Top-Right</span>
+                    <Check className="w-4 h-4 text-[#16A34A] shrink-0" />
+                  </div>
+                  <p className="text-[11px] text-institutional-600 dark:text-institutional-400">
+                    Confirm by tapping <strong>Add</strong>. Nirikshak-AI will appear on your Home Screen as an offline-ready app.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Apple Native Advantage Callout */}
+            <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 flex items-center gap-2.5">
+              <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <p className="text-[11px] text-emerald-800 dark:text-emerald-300 leading-tight">
+                Runs fullscreen without browser bars, caches Legal Metrology Rules for offline use, and loads instantly.
+              </p>
+            </div>
+
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => setShowIosInstallModal(false)}
+              className="w-full justify-center text-xs font-bold rounded-xl bg-[#0B2545] hover:bg-[#07192F] text-white cursor-pointer"
+            >
+              Got It
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Forgot Password Modal */}
       {showForgotModal && (

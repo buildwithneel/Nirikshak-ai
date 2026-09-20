@@ -32,5 +32,23 @@
       "type": "image/png"
     }
   ],
+  "id": "/",
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Citizen Check",
+      "short_name": "Check",
+      "description": "Inspect commodity packaging as a citizen",
+      "url": "/check",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Field Inspection",
+      "short_name": "Inspect",
+      "description": "Authorized Legal Metrology field inspection",
+      "url": "/login",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    }
+  ],
   "categories": ["productivity", "utilities", "government"]
 }

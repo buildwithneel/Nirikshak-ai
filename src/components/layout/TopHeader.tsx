@@ -83,7 +83,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
 
   return (
     <>
-      <header className="h-16 bg-white/90 dark:bg-[#131B17]/90 backdrop-blur-md border-b border-institutional-200 dark:border-institutional-800 px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-subtle transition-colors">
+      <header className="min-h-16 h-[calc(4rem+env(safe-area-inset-top,0px))] pt-[env(safe-area-inset-top,0px)] bg-white/90 dark:bg-[#131B17]/90 backdrop-blur-md border-b border-institutional-200 dark:border-institutional-800 px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30 shadow-subtle transition-colors">
         {/* Left Section: Emblem / Branding / Page Title */}
         <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
           <Link

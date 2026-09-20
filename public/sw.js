@@ -1,12 +1,15 @@
 // Nirikshak-AI Service Worker for PWA
-const CACHE_NAME = 'nirikshak-ai-v1';
+const CACHE_NAME = 'nirikshak-ai-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
   '/favicon.png',
+  '/favicon.svg',
   '/logo.png',
   '/logo-icon.png',
+  '/logo-full-transparent.png',
+  '/apple-touch-icon.png',
   '/pwa-192x192.png',
   '/pwa-512x512.png',
 ];

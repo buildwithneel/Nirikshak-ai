@@ -32,7 +32,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenDrawer }
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-institutional-border shadow-elevated lg:hidden safe-bottom"
+      className="fixed bottom-0 left-0 right-0 z-30 bg-white dark:bg-[#131B17] border-t border-institutional-border dark:border-institutional-800 shadow-elevated lg:hidden safe-bottom"
       aria-label="Mobile Bottom Navigation"
     >
       {isConsumerMode ? (
