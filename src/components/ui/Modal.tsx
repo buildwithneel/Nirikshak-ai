@@ -65,12 +65,12 @@ export const Modal: React.FC<ModalProps> = ({
               {title}
             </h3>
             {subtitle && (
-              <p className="text-xs text-institutional-500 mt-0.5">{subtitle}</p>
+              <p className="text-xs font-medium text-institutional-700 dark:text-institutional-300 mt-0.5">{subtitle}</p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-institutional-400 hover:text-institutional-700 hover:bg-institutional-200/80 transition-colors"
+            className="p-1.5 rounded-lg text-institutional-600 hover:text-institutional-900 hover:bg-institutional-200/80 transition-colors"
             aria-label="Close dialog"
           >
             <X className="w-5 h-5" />

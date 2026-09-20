@@ -236,34 +236,34 @@ export const DashboardPage: React.FC = () => {
           <span className="font-mono text-xs font-bold text-institutional-900 dark:text-white uppercase tracking-wide">
             Statutory Inspection Pipeline
           </span>
-          <span className="text-[11px] text-institutional-400 font-medium">Linear Enforcement Lifecycle</span>
+          <span className="text-[11px] text-institutional-700 dark:text-institutional-300 font-semibold">Linear Enforcement Lifecycle</span>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
           <div className="p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50">
             <span className="text-[10px] font-mono font-bold text-amber-800 dark:text-amber-400 block">STEP 1</span>
             <div className="font-bold text-institutional-900 dark:text-white mt-0.5">Complaints</div>
-            <div className="text-[11px] text-institutional-600 dark:text-institutional-400 mt-1 tabular-nums">{openComplaintsCount} Intake Cases</div>
+            <div className="text-[11px] font-medium text-institutional-700 dark:text-institutional-300 mt-1 tabular-nums">{openComplaintsCount} Intake Cases</div>
           </div>
           <div className="p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50">
             <span className="text-[10px] font-mono font-bold text-blue-800 dark:text-blue-400 block">STEP 2</span>
             <div className="font-bold text-institutional-900 dark:text-white mt-0.5">Under Review</div>
-            <div className="text-[11px] text-institutional-600 dark:text-institutional-400 mt-1">Preliminary Assessment</div>
+            <div className="text-[11px] font-medium text-institutional-700 dark:text-institutional-300 mt-1">Preliminary Assessment</div>
           </div>
           <div className="p-3 rounded-xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-900/50">
             <span className="text-[10px] font-mono font-bold text-purple-800 dark:text-purple-400 block">STEP 3</span>
             <div className="font-bold text-institutional-900 dark:text-white mt-0.5">Inspection</div>
-            <div className="text-[11px] text-institutional-600 dark:text-institutional-400 mt-1 tabular-nums">{activeInspectionsCount} Multi-Image OCR</div>
+            <div className="text-[11px] font-medium text-institutional-700 dark:text-institutional-300 mt-1 tabular-nums">{activeInspectionsCount} Multi-Image OCR</div>
           </div>
           <div className="p-3 rounded-xl bg-teal-50/70 dark:bg-teal-950/30 border border-teal-200 dark:border-teal-900/50">
             <span className="text-[10px] font-mono font-bold text-teal-800 dark:text-teal-400 block">STEP 4</span>
             <div className="font-bold text-institutional-900 dark:text-white mt-0.5">Verification</div>
-            <div className="text-[11px] text-institutional-600 dark:text-institutional-400 mt-1 tabular-nums">{pendingVerificationCount} Officer Protocols</div>
+            <div className="text-[11px] font-medium text-institutional-700 dark:text-institutional-300 mt-1 tabular-nums">{pendingVerificationCount} Officer Protocols</div>
           </div>
           <div className="p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 col-span-2 md:col-span-1">
             <span className="text-[10px] font-mono font-bold text-emerald-800 dark:text-emerald-400 block">STEP 5</span>
             <div className="font-bold text-institutional-900 dark:text-white mt-0.5">Report</div>
-            <div className="text-[11px] text-institutional-600 dark:text-institutional-400 mt-1 tabular-nums">{reportsGeneratedCount} Legal Metrology PDFs</div>
+            <div className="text-[11px] font-medium text-institutional-700 dark:text-institutional-300 mt-1 tabular-nums">{reportsGeneratedCount} Legal Metrology PDFs</div>
           </div>
         </div>
       </div>
@@ -443,7 +443,7 @@ export const DashboardPage: React.FC = () => {
 
                   return (
                     <div key={idx} className="flex flex-col items-center h-full justify-end group cursor-pointer">
-                      <div className="text-[9px] sm:text-[10px] text-institutional-400 font-mono mb-1 font-bold tabular-nums">
+                      <div className="text-[9px] sm:text-[10px] text-institutional-700 dark:text-institutional-300 font-mono mb-1 font-bold tabular-nums">
                         {total}
                       </div>
 
@@ -469,7 +469,7 @@ export const DashboardPage: React.FC = () => {
                         />
                       </div>
 
-                      <span className="text-[9px] sm:text-[10px] text-institutional-500 dark:text-institutional-400 font-mono mt-2 truncate w-full text-center">
+                      <span className="text-[9px] sm:text-[10px] text-institutional-700 dark:text-institutional-300 font-mono mt-2 truncate w-full text-center">
                         {day.date}
                       </span>
                     </div>
@@ -478,7 +478,7 @@ export const DashboardPage: React.FC = () => {
               </div>
 
               {/* Chart Legend */}
-              <div className="flex flex-wrap items-center justify-between pt-3 border-t border-institutional-100 dark:border-institutional-800 text-xs text-institutional-600 dark:text-institutional-400 gap-2">
+              <div className="flex flex-wrap items-center justify-between pt-3 border-t border-institutional-100 dark:border-institutional-800 text-xs text-institutional-700 dark:text-institutional-300 font-medium gap-2">
                 <div className="flex items-center gap-3 sm:gap-4">
                   <div className="flex items-center gap-1.5">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#059669]" />
@@ -493,7 +493,7 @@ export const DashboardPage: React.FC = () => {
                     <span>Violations</span>
                   </div>
                 </div>
-                <span className="text-[11px] text-institutional-400">
+                <span className="text-[11px] text-institutional-700 dark:text-institutional-300 font-medium">
                   Standard benchmark: ≥85%
                 </span>
               </div>
@@ -519,7 +519,7 @@ export const DashboardPage: React.FC = () => {
                     <span className="font-semibold text-institutional-800 dark:text-institutional-200 line-clamp-1">
                       {v.name}
                     </span>
-                    <span className="font-mono font-bold text-institutional-500 dark:text-institutional-400 ml-2 tabular-nums">
+                    <span className="font-mono font-bold text-institutional-700 dark:text-institutional-300 ml-2 tabular-nums">
                       {v.count}
                     </span>
                   </div>
@@ -547,7 +547,7 @@ export const DashboardPage: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-institutional-200 dark:border-institutional-800 text-institutional-500 dark:text-institutional-400 uppercase tracking-wider font-mono">
+                <tr className="border-b border-institutional-200 dark:border-institutional-800 text-institutional-700 dark:text-institutional-300 uppercase tracking-wider font-mono font-semibold">
                   <th className="pb-3 font-bold">Commodity Sector</th>
                   <th className="pb-3 font-bold text-right">Total Inspected</th>
                   <th className="pb-3 font-bold text-right">Compliant</th>
@@ -559,11 +559,21 @@ export const DashboardPage: React.FC = () => {
               <tbody className="divide-y divide-institutional-100 dark:divide-institutional-800/70">
                 {mockComplianceByCategory.map((cat, idx) => (
                   <tr key={idx} className="hover:bg-institutional-50/70 dark:hover:bg-[#1A2420]/70 transition-colors">
-                    <td className="py-3 font-bold text-institutional-900 dark:text-white">{cat.category}</td>
-                    <td className="py-3 font-mono text-right text-institutional-600 dark:text-institutional-300 tabular-nums">{cat.total}</td>
-                    <td className="py-3 font-mono text-right text-govgreen-700 dark:text-govgreen-400 font-bold tabular-nums">{cat.compliant}</td>
-                    <td className="py-3 font-mono text-right text-amber-700 dark:text-amber-400 font-bold tabular-nums">{cat.review}</td>
-                    <td className="py-3 font-mono text-right text-govred-700 dark:text-govred-400 font-bold tabular-nums">{cat.violation}</td>
+                    <td className="py-3 font-semibold text-institutional-900 dark:text-white">
+                      {cat.category}
+                    </td>
+                    <td className="py-3 text-right font-mono font-bold text-institutional-700 dark:text-institutional-300 tabular-nums">
+                      {cat.total}
+                    </td>
+                    <td className="py-3 text-right font-mono text-govgreen-700 dark:text-govgreen-400 font-bold tabular-nums">
+                      {cat.compliant}
+                    </td>
+                    <td className="py-3 text-right font-mono text-amber-700 dark:text-amber-400 font-bold tabular-nums">
+                      {cat.review}
+                    </td>
+                    <td className="py-3 text-right font-mono text-govred-600 dark:text-govred-400 font-bold tabular-nums">
+                      {cat.violation}
+                    </td>
                     <td className="py-3 text-right">
                       <span className="font-mono font-bold px-2 py-0.5 rounded-lg bg-institutional-100 dark:bg-[#1C2721] text-institutional-900 dark:text-white border border-institutional-200 dark:border-institutional-800 tabular-nums">
                         {cat.rate}
@@ -577,45 +587,47 @@ export const DashboardPage: React.FC = () => {
         </Card>
       </div>
 
-      {/* Recent Field Inspections & Feature Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 animate-page-enter stagger-4">
+      {/* Recent Statutory Audits & Future Capabilities */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6 animate-page-enter stagger-4">
         {/* Recent Inspections Table (2 cols) */}
         <div className="lg:col-span-2">
           <Card
-            title={t('dashboard.recentInspections', 'Recent Field Inspections')}
-            subtitle="Latest packaged commodities submitted for Legal Metrology AI evaluation"
+            title={t('dashboard.recentAudits', 'Recent Statutory Inspections')}
+            subtitle="Verified package audit logs under Legal Metrology enforcement"
             action={
-              <Link to="/inspections" className="text-xs text-govgreen-700 dark:text-govgreen-400 font-bold hover:underline flex items-center gap-1">
-                <span>View All</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
+              <button
+                type="button"
+                onClick={() => navigate('/inspections')}
+                className="text-xs text-govgreen-800 dark:text-govgreen-300 font-bold hover:underline cursor-pointer"
+              >
+                {t('dashboard.viewAllAudits', 'View All Records')} &rarr;
+              </button>
             }
           >
-            {/* Mobile Cards View (<sm screens) - Prevents squished columns seen in user screenshot */}
-            <div className="block sm:hidden divide-y divide-institutional-100 dark:divide-institutional-800/80">
+            {/* Mobile Cards View (<sm screens) */}
+            <div className="sm:hidden space-y-3">
               {mockRecentInspections.map((rec) => (
                 <div
                   key={rec.id}
                   onClick={() => navigate(rec.id === 'LM-2026-001284' ? '/scan/result' : `/inspections/${rec.id}`)}
-                  className="py-3.5 space-y-2 cursor-pointer active:bg-institutional-50 dark:active:bg-[#1A2420] transition-colors"
+                  className="p-3.5 rounded-xl border border-institutional-200 dark:border-institutional-800 bg-institutional-50/50 dark:bg-[#1A2420]/50 space-y-2 cursor-pointer active:scale-98 transition-transform"
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono font-bold text-xs text-govgreen-700 dark:text-govgreen-400 tabular-nums">
-                      {rec.id}
-                    </span>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <span className="font-mono text-xs font-bold text-govgreen-700 dark:text-govgreen-400">
+                        {rec.id}
+                      </span>
+                      <div className="font-bold text-sm text-institutional-900 dark:text-white mt-0.5">
+                        {rec.productName}
+                      </div>
+                      <div className="text-xs text-institutional-700 dark:text-institutional-300 font-medium">
+                        {rec.brand} • {rec.category}
+                      </div>
+                    </div>
                     <StatusBadge status={rec.status as any} size="sm" />
                   </div>
 
-                  <div>
-                    <div className="font-bold text-sm text-institutional-900 dark:text-white leading-snug">
-                      {rec.productName}
-                    </div>
-                    <div className="text-xs text-institutional-600 dark:text-institutional-300 font-medium mt-0.5">
-                      {rec.brand} • {rec.category}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs text-institutional-500 dark:text-institutional-400 pt-1">
+                  <div className="flex items-center justify-between text-xs text-institutional-700 dark:text-institutional-300 font-medium pt-1">
                     <span className="font-mono text-[11px] tabular-nums">{rec.date}</span>
                     <div className="flex items-center gap-1 font-mono text-xs font-bold text-institutional-900 dark:text-white bg-institutional-100 dark:bg-[#1C2721] px-2 py-0.5 rounded-lg border border-institutional-200 dark:border-institutional-800 tabular-nums">
                       <span>Score:</span>
@@ -630,7 +642,7 @@ export const DashboardPage: React.FC = () => {
             <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-left text-xs min-w-[580px]">
                 <thead>
-                  <tr className="border-b border-institutional-200 dark:border-institutional-800 text-institutional-500 dark:text-institutional-400 uppercase tracking-wider font-mono">
+                  <tr className="border-b border-institutional-200 dark:border-institutional-800 text-institutional-700 dark:text-institutional-300 uppercase tracking-wider font-mono font-semibold">
                     <th className="pb-3 font-bold">Inspection ID</th>
                     <th className="pb-3 font-bold">Product / Commodity</th>
                     <th className="pb-3 font-bold">Date</th>
@@ -679,7 +691,7 @@ export const DashboardPage: React.FC = () => {
               <StatusBadge status="COMING_SOON" size="sm" />
             </div>
             <h4 className="font-bold text-sm text-institutional-900 dark:text-white">E-Commerce Compliance</h4>
-            <p className="text-xs text-institutional-600 dark:text-institutional-400 leading-relaxed">
+            <p className="text-xs font-medium text-institutional-700 dark:text-institutional-300 leading-relaxed">
               Compare online marketplace product listings with physical packaging to detect digital declaration discrepancies under Rule 6(10).
             </p>
           </div>
@@ -692,7 +704,7 @@ export const DashboardPage: React.FC = () => {
               <StatusBadge status="NEXT_PHASE" size="sm" />
             </div>
             <h4 className="font-bold text-sm text-institutional-900 dark:text-white">Font-Size & Readability Engine</h4>
-            <p className="text-xs text-institutional-600 dark:text-institutional-400 leading-relaxed">
+            <p className="text-xs font-medium text-institutional-700 dark:text-institutional-300 leading-relaxed">
               Calibrate physical character height in millimeters against Table 1 of Rule 9 based on package net quantity brackets.
             </p>
           </div>

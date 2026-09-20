@@ -348,7 +348,7 @@ export const LoginPage: React.FC = () => {
                 {isStandalone || isDownloaded ? (
                   <span className="text-[#16A34A] font-bold">• Installed</span>
                 ) : (
-                  <span className="text-slate-400">• Android Device Detected</span>
+                  <span className="text-slate-600 dark:text-slate-400 font-medium">• Android Device Detected</span>
                 )}
               </div>
             </div>
@@ -358,7 +358,7 @@ export const LoginPage: React.FC = () => {
           <div className="text-center space-y-2.5">
             <div className="flex items-center justify-center gap-2 mb-1">
               <span className="w-2 h-2 rounded-full bg-govgreen-600 dark:bg-govgreen-400 animate-soft-pulse" />
-              <span className="text-[11px] font-mono font-bold text-institutional-500 dark:text-institutional-400 uppercase tracking-wider">
+              <span className="text-[11px] font-mono font-bold text-institutional-700 dark:text-institutional-300 uppercase tracking-wider">
                 OFFICIAL SYSTEM
               </span>
             </div>
@@ -381,10 +381,10 @@ export const LoginPage: React.FC = () => {
                   PCR 2011
                 </span>
               </div>
-              <p className="text-xs font-semibold text-institutional-600 dark:text-institutional-400 uppercase tracking-wider mt-0.5">
+              <p className="text-xs font-semibold text-institutional-700 dark:text-institutional-300 uppercase tracking-wider mt-0.5">
                 {t('brand.fullTitle', 'Legal Metrology Compliance & Inspection Platform')}
               </p>
-              <p className="text-[11px] text-institutional-500 dark:text-institutional-400 mt-0.5">
+              <p className="text-[11px] font-medium text-institutional-700 dark:text-institutional-300 mt-0.5">
                 Government of India • Ministry of Consumer Affairs
               </p>
             </div>
@@ -491,7 +491,7 @@ export const LoginPage: React.FC = () => {
                     ? t('auth.officerVerified', 'Officer Access Verified')
                     : t('auth.welcomeConsumer', 'Welcome to Nirikshak-AI')}
                 </h3>
-                <p className="text-xs text-institutional-500 dark:text-institutional-400 mt-1">
+                <p className="text-xs font-medium text-institutional-700 dark:text-institutional-300 mt-1">
                   {confirmedRole === 'OFFICER'
                     ? t('auth.openingInspectionPortal', 'Launching Enforcement Workspace…')
                     : t('auth.openingConsumerPortal', 'Launching Citizen Portal…')}
@@ -500,7 +500,7 @@ export const LoginPage: React.FC = () => {
 
               <div className="flex justify-center items-center gap-1.5 pt-2">
                 <span className="w-2 h-2 rounded-full bg-govgreen-600 dark:bg-govgreen-400 animate-ping" />
-                <span className="text-[11px] font-mono font-bold text-institutional-400">
+                <span className="text-[11px] font-mono font-bold text-institutional-700 dark:text-institutional-300">
                   AUTHENTICATED
                 </span>
               </div>
@@ -513,7 +513,7 @@ export const LoginPage: React.FC = () => {
                   <h2 className="text-base sm:text-lg font-bold text-institutional-900 dark:text-white">
                     {t('auth.unifiedSignIn', 'Authorized Sign In')}
                   </h2>
-                  <p className="text-xs text-institutional-500 dark:text-institutional-400 mt-0.5">
+                  <p className="text-xs font-medium text-institutional-700 dark:text-institutional-300 mt-0.5">
                     Unified access portal for statutory officers and consumer citizens
                   </p>
                 </div>
@@ -561,11 +561,11 @@ export const LoginPage: React.FC = () => {
                 </button>
 
                 <div className="relative flex items-center justify-center my-3">
-                  <div className="border-t border-institutional-200 dark:border-institutional-800 w-full"></div>
-                  <span className="bg-white dark:bg-[#131B17] px-3 text-[10px] sm:text-[11px] font-mono font-bold uppercase text-institutional-400 tracking-wider">
+                  <div className="border-t border-institutional-300 dark:border-institutional-700 w-full"></div>
+                  <span className="bg-white dark:bg-[#131B17] px-3 text-[10px] sm:text-[11px] font-mono font-bold uppercase text-institutional-700 dark:text-institutional-300 tracking-wider">
                     {t('auth.orDivider', 'OR USE CREDENTIALS')}
                   </span>
-                  <div className="border-t border-institutional-200 dark:border-institutional-800 w-full"></div>
+                  <div className="border-t border-institutional-300 dark:border-institutional-700 w-full"></div>
                 </div>
               </div>
 
@@ -576,7 +576,7 @@ export const LoginPage: React.FC = () => {
                     {t('auth.emailLabel', 'Email Address')}
                   </label>
                   <div className="relative">
-                    <Mail className="w-4 h-4 text-institutional-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Mail className="w-4 h-4 text-institutional-600 dark:text-institutional-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="email"
                       value={email}
@@ -585,7 +585,7 @@ export const LoginPage: React.FC = () => {
                         if (errorMessage) setErrorMessage(null);
                       }}
                       placeholder="inspector@officer.com or name@gmail.com"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-institutional-200 dark:border-institutional-800 bg-white dark:bg-[#1A2420] text-institutional-900 dark:text-white placeholder:text-institutional-400 focus:outline-none focus:ring-2 focus:ring-[#16A34A] transition-all text-xs sm:text-sm"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-institutional-300 dark:border-institutional-700 bg-white dark:bg-[#1A2420] text-institutional-900 dark:text-white placeholder:text-institutional-600 dark:placeholder:text-institutional-400 focus:outline-none focus:ring-2 focus:ring-[#16A34A] transition-all text-xs sm:text-sm"
                       required
                       autoComplete="username"
                     />
@@ -608,7 +608,7 @@ export const LoginPage: React.FC = () => {
                   </div>
 
                   <div className="relative">
-                    <Lock className="w-4 h-4 text-institutional-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Lock className="w-4 h-4 text-institutional-600 dark:text-institutional-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type={showPassword ? 'text' : 'password'}
                       value={password}
@@ -617,14 +617,14 @@ export const LoginPage: React.FC = () => {
                         if (errorMessage) setErrorMessage(null);
                       }}
                       placeholder="••••••••••••"
-                      className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-institutional-200 dark:border-institutional-800 bg-white dark:bg-[#1A2420] text-institutional-900 dark:text-white placeholder:text-institutional-400 focus:outline-none focus:ring-2 focus:ring-[#16A34A] transition-all text-xs sm:text-sm font-mono"
+                      className="w-full pl-9 pr-10 py-2.5 rounded-xl border border-institutional-300 dark:border-institutional-700 bg-white dark:bg-[#1A2420] text-institutional-900 dark:text-white placeholder:text-institutional-600 dark:placeholder:text-institutional-400 focus:outline-none focus:ring-2 focus:ring-[#16A34A] transition-all text-xs sm:text-sm font-mono"
                       required
                       autoComplete="current-password"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-institutional-400 hover:text-institutional-700 dark:hover:text-institutional-200 transition-colors cursor-pointer"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-institutional-600 hover:text-institutional-900 dark:text-institutional-400 dark:hover:text-institutional-200 transition-colors cursor-pointer"
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
                       {showPassword ? (
@@ -645,7 +645,7 @@ export const LoginPage: React.FC = () => {
                       onChange={(e) => setRememberMe(e.target.checked)}
                       className="w-3.5 h-3.5 rounded text-[#16A34A] focus:ring-[#16A34A] border-institutional-300 dark:border-institutional-700 bg-white dark:bg-[#1A2420]"
                     />
-                    <span className="text-xs text-institutional-600 dark:text-institutional-400 font-medium">
+                    <span className="text-xs text-institutional-700 dark:text-institutional-300 font-medium">
                       {t('auth.rememberMe', 'Remember me')}
                     </span>
                   </label>
@@ -672,7 +672,7 @@ export const LoginPage: React.FC = () => {
 
               {/* Statutory Notice */}
               <div className="pt-2 border-t border-institutional-100 dark:border-institutional-800/80 text-center">
-                <div className="inline-flex items-center gap-1.5 text-[10px] text-institutional-500 dark:text-institutional-400 font-medium">
+                <div className="inline-flex items-center gap-1.5 text-[10px] text-institutional-700 dark:text-institutional-300 font-semibold">
                   <Shield className="w-3 h-3 text-[#16A34A]" />
                   <span>Statutory Role-Based Access Control</span>
                 </div>
@@ -682,7 +682,7 @@ export const LoginPage: React.FC = () => {
         </div>
 
         {!isIOS && !isAndroid && (
-          <div className="text-center text-[11px] text-institutional-500 dark:text-institutional-400">
+          <div className="text-center text-[11px] font-medium text-institutional-700 dark:text-institutional-300">
             Legal Metrology Enforcement System • Built for official field &amp; public vigilance
           </div>
         )}
@@ -702,7 +702,7 @@ export const LoginPage: React.FC = () => {
                   <h3 className="font-bold text-sm sm:text-base text-institutional-900 dark:text-white">
                     Install Nirikshak-AI on iOS
                   </h3>
-                  <p className="text-[11px] text-institutional-500 dark:text-institutional-400">
+                  <p className="text-[11px] font-medium text-institutional-700 dark:text-institutional-300">
                     Apple iPhone &amp; iPad Home Screen Setup
                   </p>
                 </div>
@@ -710,7 +710,7 @@ export const LoginPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowIosInstallModal(false)}
-                className="p-1 rounded-full text-institutional-400 hover:text-institutional-700 dark:hover:text-institutional-200 transition-colors cursor-pointer"
+                className="p-1 rounded-full text-institutional-600 hover:text-institutional-900 dark:text-institutional-400 dark:hover:text-institutional-200 transition-colors cursor-pointer"
                 aria-label="Close"
               >
                 <span className="text-xl leading-none font-bold">&times;</span>
@@ -728,7 +728,7 @@ export const LoginPage: React.FC = () => {
                     <span>Tap Safari Share button</span>
                     <SafariShareIcon className="w-4 h-4 text-blue-500 shrink-0" />
                   </div>
-                  <p className="text-[11px] text-institutional-600 dark:text-institutional-400">
+                  <p className="text-[11px] text-institutional-700 dark:text-institutional-300">
                     In Safari toolbar (bottom on iPhone, top on iPad), tap the Share icon.
                   </p>
                 </div>
@@ -743,7 +743,7 @@ export const LoginPage: React.FC = () => {
                     <span>Select &ldquo;Add to Home Screen&rdquo;</span>
                     <PlusSquare className="w-4 h-4 text-[#16A34A] shrink-0" />
                   </div>
-                  <p className="text-[11px] text-institutional-600 dark:text-institutional-400">
+                  <p className="text-[11px] text-institutional-700 dark:text-institutional-300">
                     Scroll down through the share options and tap <strong>Add to Home Screen</strong>.
                   </p>
                 </div>
@@ -758,7 +758,7 @@ export const LoginPage: React.FC = () => {
                     <span>Tap &ldquo;Add&rdquo; in Top-Right</span>
                     <Check className="w-4 h-4 text-[#16A34A] shrink-0" />
                   </div>
-                  <p className="text-[11px] text-institutional-600 dark:text-institutional-400">
+                  <p className="text-[11px] text-institutional-700 dark:text-institutional-300">
                     Confirm by tapping <strong>Add</strong>. Nirikshak-AI will appear on your Home Screen as an offline-ready app.
                   </p>
                 </div>
@@ -797,7 +797,7 @@ export const LoginPage: React.FC = () => {
               <h3 className="font-bold text-base text-institutional-900 dark:text-white">
                 Credential Assistance
               </h3>
-              <p className="text-xs text-institutional-600 dark:text-institutional-400 leading-relaxed">
+              <p className="text-xs font-medium text-institutional-700 dark:text-institutional-300 leading-relaxed">
                 For authorized officers, contact your state nodal administrator or Legal Metrology helpdesk. Consumers may use the evaluation demo accounts or reset via verified email.
               </p>
             </div>

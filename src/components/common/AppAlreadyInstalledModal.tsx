@@ -52,7 +52,7 @@ export const AppAlreadyInstalledModal: React.FC<AppAlreadyInstalledModalProps> =
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-full text-institutional-400 hover:text-institutional-700 dark:hover:text-institutional-200 transition-colors cursor-pointer"
+            className="p-1 rounded-full text-institutional-600 hover:text-institutional-900 dark:text-institutional-400 dark:hover:text-institutional-200 transition-colors cursor-pointer"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
@@ -61,15 +61,15 @@ export const AppAlreadyInstalledModal: React.FC<AppAlreadyInstalledModalProps> =
 
         {/* Informative Explanation */}
         <div className="space-y-3">
-          <p className="text-xs text-institutional-600 dark:text-institutional-400 leading-relaxed">
+          <p className="text-xs font-medium text-institutional-700 dark:text-institutional-300 leading-relaxed">
             <strong>Nirikshak-AI</strong> is already downloaded and registered on this system. Multiple downloads are automatically prevented so your device maintains a single, synchronized application instance.
           </p>
 
           {/* System Device Card */}
           <div className="p-3.5 rounded-2xl bg-institutional-50 dark:bg-[#1A2420] border border-institutional-200 dark:border-institutional-800 space-y-2.5">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-institutional-500 dark:text-institutional-400 font-medium flex items-center gap-1.5">
-                <Smartphone className="w-3.5 h-3.5 text-institutional-400" />
+              <span className="text-institutional-700 dark:text-institutional-300 font-medium flex items-center gap-1.5">
+                <Smartphone className="w-3.5 h-3.5 text-institutional-600 dark:text-institutional-400" />
                 <span>Running State:</span>
               </span>
               <span className="font-semibold text-institutional-900 dark:text-white font-mono text-[11px]">
@@ -78,8 +78,8 @@ export const AppAlreadyInstalledModal: React.FC<AppAlreadyInstalledModalProps> =
             </div>
 
             <div className="flex items-center justify-between text-xs border-t border-institutional-200/60 dark:border-institutional-800/60 pt-2">
-              <span className="text-institutional-500 dark:text-institutional-400 font-medium flex items-center gap-1.5">
-                <HardDrive className="w-3.5 h-3.5 text-institutional-400" />
+              <span className="text-institutional-700 dark:text-institutional-300 font-medium flex items-center gap-1.5">
+                <HardDrive className="w-3.5 h-3.5 text-institutional-600 dark:text-institutional-400" />
                 <span>Storage &amp; Cache:</span>
               </span>
               <span className="font-semibold text-emerald-700 dark:text-emerald-400 font-mono text-[11px]">
@@ -88,10 +88,10 @@ export const AppAlreadyInstalledModal: React.FC<AppAlreadyInstalledModalProps> =
             </div>
 
             <div className="flex items-center justify-between text-xs border-t border-institutional-200/60 dark:border-institutional-800/60 pt-2">
-              <span className="text-institutional-500 dark:text-institutional-400 font-medium">
+              <span className="text-institutional-700 dark:text-institutional-300 font-medium">
                 Installed Record:
               </span>
-              <span className="font-mono text-[11px] text-institutional-600 dark:text-institutional-300">
+              <span className="font-mono text-[11px] font-semibold text-institutional-700 dark:text-institutional-300">
                 {formattedDate}
               </span>
             </div>
@@ -114,7 +114,7 @@ export const AppAlreadyInstalledModal: React.FC<AppAlreadyInstalledModalProps> =
             <button
               type="button"
               onClick={onReinstallTest}
-              className="text-[10px] text-institutional-400 hover:text-institutional-600 underline cursor-pointer mr-auto"
+              className="text-[10px] text-institutional-600 hover:text-institutional-900 dark:text-institutional-400 underline cursor-pointer mr-auto"
             >
               Reset for testing
             </button>

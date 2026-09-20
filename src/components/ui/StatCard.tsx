@@ -99,7 +99,7 @@ export const StatCard: React.FC<StatCardProps> = ({
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <span className="text-[11px] font-bold uppercase tracking-wider text-institutional-500 dark:text-institutional-400 font-mono">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-institutional-700 dark:text-institutional-300 font-mono">
             {title}
           </span>
           <div className="text-2xl sm:text-3xl font-extrabold text-institutional-900 dark:text-white mt-1 tracking-tight tabular-nums">
@@ -113,8 +113,8 @@ export const StatCard: React.FC<StatCardProps> = ({
         </div>
       </div>
 
-      <div className="mt-4 pt-3 border-t border-institutional-100 dark:border-institutional-800/80 flex items-center justify-between text-xs text-institutional-500 dark:text-institutional-400">
-        <div className="truncate text-[11px] font-medium">{subtitle || 'Legal Metrology Rules'}</div>
+      <div className="mt-4 pt-3 border-t border-institutional-100 dark:border-institutional-800/80 flex items-center justify-between text-xs text-institutional-700 dark:text-institutional-300 font-medium">
+        <div className="truncate text-[11px]">{subtitle || 'Legal Metrology Rules'}</div>
         <div>{getTrendElement()}</div>
       </div>
     </div>

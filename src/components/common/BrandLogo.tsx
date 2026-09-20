@@ -89,7 +89,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
           </span>
         </div>
         {showSubtitle && (
-          <span className="text-[10px] text-institutional-500 dark:text-institutional-400 font-medium tracking-tight">
+          <span className="text-[10px] text-institutional-700 dark:text-institutional-300 font-medium tracking-tight">
             Legal Metrology Enforcement
           </span>
         )}

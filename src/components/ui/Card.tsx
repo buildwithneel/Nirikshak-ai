@@ -36,7 +36,7 @@ export const Card: React.FC<CardProps> = ({
               title
             )}
             {subtitle && (
-              <p className="text-xs text-institutional-500 dark:text-institutional-400 mt-0.5 leading-relaxed line-clamp-1 sm:line-clamp-none">
+              <p className="text-xs font-medium text-institutional-700 dark:text-institutional-300 mt-0.5 leading-relaxed line-clamp-1 sm:line-clamp-none">
                 {subtitle}
               </p>
             )}
@@ -50,7 +50,7 @@ export const Card: React.FC<CardProps> = ({
       </div>
 
       {footer && (
-        <div className="px-4 sm:px-5 py-3 border-t border-institutional-100 dark:border-institutional-800 bg-institutional-50/50 dark:bg-[#19241F]/50 text-xs text-institutional-500 dark:text-institutional-400">
+        <div className="px-4 sm:px-5 py-3 border-t border-institutional-100 dark:border-institutional-800 bg-institutional-50/50 dark:bg-[#19241F]/50 text-xs font-medium text-institutional-700 dark:text-institutional-300">
           {footer}
         </div>
       )}

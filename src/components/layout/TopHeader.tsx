@@ -107,7 +107,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
                   PCR 2011
                 </span>
               </div>
-              <span className="text-[10px] text-institutional-500 dark:text-institutional-400 font-medium tracking-tight">
+              <span className="text-[10px] text-institutional-700 dark:text-institutional-300 font-medium tracking-tight">
                 Legal Metrology Enforcement
               </span>
             </div>
@@ -432,7 +432,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
                 <h4 className="font-bold text-institutional-900 dark:text-white text-xs uppercase font-mono mb-1.5">
                   5 Mandatory Declarations (PCR Rule 6):
                 </h4>
-                <ol className="list-decimal pl-5 space-y-1 text-institutional-600 dark:text-institutional-400">
+                <ol className="list-decimal pl-5 space-y-1 text-institutional-700 dark:text-institutional-300 font-medium">
                   <li><strong>Product Identity</strong>: Generic commodity description on PDP.</li>
                   <li><strong>Manufacturer Details</strong>: Registered name and complete physical address.</li>
                   <li><strong>Net Quantity</strong>: Standard metric units per Rule 11 &amp; 13.</li>

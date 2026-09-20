@@ -92,7 +92,7 @@ export const SystemStatusModal: React.FC<{ isOpen: boolean; onClose: () => void 
           {/* Environment Summary */}
           <div className="grid grid-cols-2 gap-2.5">
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-[10px] uppercase font-mono text-govink-muted block mb-0.5">
+              <span className="text-[10px] uppercase font-mono text-govink-secondary font-semibold block mb-0.5">
                 Environment
               </span>
               <span className="font-bold text-govink-primary text-sm flex items-center gap-1.5">
@@ -102,7 +102,7 @@ export const SystemStatusModal: React.FC<{ isOpen: boolean; onClose: () => void 
             </div>
 
             <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-              <span className="text-[10px] uppercase font-mono text-govink-muted block mb-0.5">
+              <span className="text-[10px] uppercase font-mono text-govink-secondary font-semibold block mb-0.5">
                 Authentication Mode
               </span>
               <span className="font-bold text-govink-primary text-sm flex items-center gap-1.5">
@@ -115,7 +115,7 @@ export const SystemStatusModal: React.FC<{ isOpen: boolean; onClose: () => void 
           {loading ? (
             <div className="py-8 text-center space-y-2">
               <RefreshCw className="w-6 h-6 animate-spin text-govgreen-700 mx-auto" />
-              <p className="text-govink-muted">Polling system diagnostics…</p>
+              <p className="text-govink-secondary font-medium">Polling system diagnostics…</p>
             </div>
           ) : error ? (
             <div className="p-3 bg-govred-50 border border-govred-200 rounded-xl text-govred-800 flex items-start gap-2">
@@ -124,7 +124,7 @@ export const SystemStatusModal: React.FC<{ isOpen: boolean; onClose: () => void 
             </div>
           ) : (
             <div className="space-y-2">
-              <span className="text-[11px] uppercase font-mono font-bold text-govink-muted block">
+              <span className="text-[11px] uppercase font-mono font-bold text-govink-secondary block">
                 Subsystem Health Grid
               </span>
 
@@ -195,7 +195,7 @@ export const SystemStatusModal: React.FC<{ isOpen: boolean; onClose: () => void 
           )}
 
           {/* Privacy Note */}
-          <p className="text-[11px] text-govink-muted italic text-center pt-2 border-t border-slate-200">
+          <p className="text-[11px] text-govink-secondary font-medium italic text-center pt-2 border-t border-slate-200">
             Security policy: Internal connection strings, credentials, and API keys are strictly masked.
           </p>
         </div>
