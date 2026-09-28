@@ -99,10 +99,10 @@ export const StatCard: React.FC<StatCardProps> = ({
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <span className="text-[11px] font-bold uppercase tracking-wider text-institutional-700 dark:text-institutional-300 font-mono">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-institutional-700 dark:text-institutional-300">
             {title}
           </span>
-          <div className="text-2xl sm:text-3xl font-extrabold text-institutional-900 dark:text-white mt-1 tracking-tight tabular-nums">
+          <div className="text-2xl sm:text-3xl font-semibold text-institutional-900 dark:text-white mt-1 tracking-tight tabular-nums">
             {typeof value === 'number' ? <CountUp end={value} /> : value}
           </div>
         </div>

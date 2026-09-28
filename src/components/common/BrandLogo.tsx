@@ -59,7 +59,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
 
   if (variant === 'text') {
     return (
-      <div className={`font-display font-extrabold tracking-tight ${textSizeClasses} ${className}`}>
+      <div className={`font-display font-bold tracking-tight ${textSizeClasses} ${className}`}>
         <span className="text-[#0B2545] dark:text-white">Nirikshak</span>
         <span className="text-[#16A34A] dark:text-[#22C55E] ml-0.5">-AI</span>
       </div>
@@ -80,11 +80,11 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
       </div>
       <div className="flex flex-col min-w-0">
         <div className="flex items-center gap-1.5">
-          <span className={`font-extrabold tracking-tight font-display ${textSizeClasses}`}>
+          <span className={`font-bold tracking-tight font-display ${textSizeClasses}`}>
             <span className="text-[#0B2545] dark:text-white">Nirikshak</span>
             <span className="text-[#16A34A] dark:text-[#22C55E] ml-0.5">-AI</span>
           </span>
-          <span className="text-[9px] font-mono font-bold bg-govgreen-50 dark:bg-govgreen-950 text-govgreen-800 dark:text-govgreen-300 px-1 py-0.2 rounded border border-govgreen-200 dark:border-govgreen-800">
+          <span className="text-[9px] font-semibold bg-govgreen-50 dark:bg-govgreen-950 text-govgreen-800 dark:text-govgreen-300 px-1 py-0.2 rounded border border-govgreen-200 dark:border-govgreen-800">
             PCR
           </span>
         </div>

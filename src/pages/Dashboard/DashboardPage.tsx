@@ -84,11 +84,11 @@ export const DashboardPage: React.FC = () => {
       {/* Officer Command Center Header */}
       <div className="bg-white dark:bg-[#131B17] rounded-2xl border border-institutional-200 dark:border-institutional-800 p-4 sm:p-6 shadow-subtle flex flex-col md:flex-row md:items-center md:justify-between gap-4 animate-page-enter transition-colors">
         <div>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-govgreen-800 dark:text-govgreen-400 font-mono">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-govgreen-800 dark:text-govgreen-400">
             <span className="w-2 h-2 rounded-full bg-govgreen-600 dark:bg-govgreen-400 inline-block animate-pulse" />
             <span>OFFICER COMMAND CENTER • CURRENT WORKLOAD</span>
           </div>
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-institutional-900 dark:text-white tracking-tight mt-1 font-display">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-institutional-900 dark:text-white tracking-tight mt-1 font-display">
             {getTimeBasedGreeting()}, Officer Portal
           </h1>
           <p className="text-xs sm:text-sm text-institutional-600 dark:text-institutional-400 mt-1">
@@ -555,7 +555,7 @@ export const DashboardPage: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-institutional-200 dark:border-institutional-800 text-institutional-700 dark:text-institutional-300 uppercase tracking-wider font-mono font-semibold">
+                <tr className="border-b border-institutional-200 dark:border-institutional-800 text-institutional-700 dark:text-institutional-300 uppercase tracking-wide font-semibold">
                   <th className="pb-3 font-bold">Commodity Sector</th>
                   <th className="pb-3 font-bold text-right">Total Inspected</th>
                   <th className="pb-3 font-bold text-right">Compliant</th>

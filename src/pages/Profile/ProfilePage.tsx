@@ -86,7 +86,7 @@ export const ProfilePage: React.FC = () => {
       {/* Profile Details Card */}
       <div className="bg-white rounded-2xl border border-institutional-border p-6 shadow-subtle space-y-4">
         <div className="flex items-center justify-between border-b border-institutional-border pb-3">
-          <h2 className="text-sm font-bold text-govink-primary uppercase tracking-wider font-mono">
+          <h2 className="text-sm font-semibold text-govink-primary uppercase tracking-wide">
             {isOfficer ? 'Official Officer Account' : 'Consumer Account'}
           </h2>
           <span className="text-xs text-govgreen-900 font-semibold flex items-center gap-1">

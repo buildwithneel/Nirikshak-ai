@@ -144,14 +144,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {!isCollapsed && (
               <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold text-sm tracking-tight text-[#0B2545] dark:text-white truncate font-display">
-                    Nirikshak<span className="text-[#16A34A] dark:text-[#22C55E] font-black ml-0.5">-AI</span>
+                  <span className="font-bold text-sm tracking-tight text-[#0B2545] dark:text-white truncate font-display">
+                    Nirikshak<span className="text-[#16A34A] dark:text-[#22C55E] font-bold ml-0.5">-AI</span>
                   </span>
-                  <span className="text-[9px] font-mono font-bold bg-govgreen-50 dark:bg-govgreen-950 text-govgreen-800 dark:text-govgreen-300 px-1 py-0.2 rounded border border-govgreen-200 dark:border-govgreen-800">
+                  <span className="text-[9px] font-semibold bg-govgreen-50 dark:bg-govgreen-950 text-govgreen-800 dark:text-govgreen-300 px-1 py-0.2 rounded border border-govgreen-200 dark:border-govgreen-800">
                     PCR
                   </span>
                 </div>
-                <span className="text-[9px] font-bold text-govink-secondary tracking-wider uppercase truncate">
+                <span className="text-[9px] font-medium text-govink-secondary tracking-normal truncate">
                   LEGAL METROLOGY
                 </span>
               </div>
@@ -182,7 +182,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {navigationSections.map((section, idx) => (
             <div key={idx}>
               {!isCollapsed && (
-                <div className="px-3 mb-1.5 text-[10px] font-bold text-govink-muted tracking-wider uppercase font-mono">
+                <div className="px-3 mb-1.5 text-[10px] font-semibold text-govink-muted tracking-wide uppercase">
                   {section.title}
                 </div>
               )}

@@ -138,17 +138,19 @@ export default {
       },
       fontFamily: {
         sans: [
+          '"Noto Sans"',
+          '"Noto Sans Devanagari"',
+          '"Noto Sans Gujarati"',
           'Inter',
           '-apple-system',
           'BlinkMacSystemFont',
-          'Segoe UI',
+          '"Segoe UI"',
           'Roboto',
-          'Noto Sans Devanagari',
-          'Noto Sans Gujarati',
+          'Arial',
           'sans-serif',
         ],
         mono: [
-          'JetBrains Mono',
+          '"JetBrains Mono"',
           'Menlo',
           'Monaco',
           'Consolas',

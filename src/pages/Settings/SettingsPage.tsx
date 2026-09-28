@@ -97,11 +97,11 @@ export const SettingsPage: React.FC = () => {
 
       {/* Header */}
       <div className="bg-cream-100 rounded-2xl border border-cream-400 p-4 sm:p-6 shadow-subtle">
-        <div className="text-xs font-mono font-bold uppercase text-forest-700 flex items-center gap-1.5">
+        <div className="text-xs font-semibold uppercase tracking-wide text-forest-700 flex items-center gap-1.5">
           <Settings className="w-3.5 h-3.5 text-forest-700" />
           <span>{isOfficer ? 'SYSTEM CONFIGURATION' : 'ACCOUNT SETTINGS'}</span>
         </div>
-        <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-ink-primary tracking-tight mt-1">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-ink-primary tracking-tight mt-1">
           {isOfficer
             ? t('settings.title', 'Settings & Officer Profile')
             : 'Consumer Settings & Security'}

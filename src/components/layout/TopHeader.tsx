@@ -100,10 +100,10 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
             </div>
             <div className="hidden sm:flex flex-col">
               <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-sm tracking-tight text-[#0B2545] dark:text-white font-display">
-                  Nirikshak<span className="text-[#16A34A] dark:text-[#22C55E] font-black ml-0.5">-AI</span>
+                <span className="font-bold text-sm tracking-tight text-[#0B2545] dark:text-white font-display">
+                  Nirikshak<span className="text-[#16A34A] dark:text-[#22C55E] font-bold ml-0.5">-AI</span>
                 </span>
-                <span className="text-[9px] font-mono font-bold bg-govgreen-50 dark:bg-govgreen-950 text-govgreen-800 dark:text-govgreen-300 px-1.5 py-0.2 rounded border border-govgreen-200/80 dark:border-govgreen-800/80">
+                <span className="text-[9px] font-semibold bg-govgreen-50 dark:bg-govgreen-950 text-govgreen-800 dark:text-govgreen-300 px-1.5 py-0.2 rounded border border-govgreen-200/80 dark:border-govgreen-800/80">
                   PCR 2011
                 </span>
               </div>
@@ -197,7 +197,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
                 />
                 <div className="absolute right-0 mt-2 w-80 sm:w-88 bg-white dark:bg-[#131B17] rounded-2xl shadow-modal border border-institutional-200 dark:border-institutional-800 z-50 overflow-hidden animate-scale-in">
                   <div className="px-4 py-2.5 border-b border-institutional-200 dark:border-institutional-800 bg-institutional-50 dark:bg-[#19241F] flex items-center justify-between">
-                    <div className="font-bold text-xs text-institutional-900 dark:text-white uppercase tracking-wider font-mono flex items-center gap-1.5">
+                    <div className="font-semibold text-xs text-institutional-900 dark:text-white uppercase tracking-wide flex items-center gap-1.5">
                       <Bell className="w-3.5 h-3.5 text-govgreen-700 dark:text-govgreen-400" />
                       <span>Regulatory Notifications</span>
                     </div>
@@ -206,7 +206,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({
                         {unreadCount} New
                       </span>
                     ) : (
-                      <span className="text-[10px] text-institutional-400 font-mono">
+                      <span className="text-[10px] text-institutional-400">
                         Up to date
                       </span>
                     )}

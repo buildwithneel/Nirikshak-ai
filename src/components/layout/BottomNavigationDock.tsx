@@ -251,7 +251,7 @@ export const BottomNavigationDock: React.FC = () => {
             className="absolute bottom-full mb-3 right-0 sm:right-auto sm:left-1/2 sm:-translate-x-1/2 w-72 sm:w-80 bg-white dark:bg-[#131B17] border border-institutional-200 dark:border-institutional-800 shadow-2xl rounded-2xl p-2 z-50 animate-scale-in"
           >
             <div className="px-3 py-2 border-b border-institutional-100 dark:border-institutional-800/80 mb-1 flex items-center justify-between">
-              <span className="text-[11px] font-bold tracking-wider uppercase text-institutional-500 dark:text-institutional-400">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-institutional-500 dark:text-institutional-400">
                 {isOfficer ? 'Institutional Modules' : 'Consumer Services'}
               </span>
               <span className="text-[10px] font-mono text-govgreen-700 dark:text-govgreen-400 bg-govgreen-50 dark:bg-govgreen-950/50 px-1.5 py-0.5 rounded border border-govgreen-200/60 dark:border-govgreen-800/60">

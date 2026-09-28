@@ -520,7 +520,7 @@ export const LoginPage: React.FC = () => {
           <div className="text-center space-y-2.5">
             <div className="flex items-center justify-center gap-2 mb-1">
               <span className="w-2 h-2 rounded-full bg-govgreen-600 dark:bg-govgreen-400 animate-soft-pulse" />
-              <span className="text-[11px] font-mono font-bold text-institutional-700 dark:text-institutional-300 uppercase tracking-wider">
+              <span className="text-[11px] font-semibold text-institutional-700 dark:text-institutional-300 uppercase tracking-wide">
                 OFFICIAL SYSTEM
               </span>
             </div>
@@ -535,15 +535,15 @@ export const LoginPage: React.FC = () => {
 
             <div>
               <div className="flex items-center justify-center gap-1.5">
-                <span className="font-extrabold text-2xl sm:text-3xl font-display">
+                <span className="font-bold text-2xl sm:text-3xl font-display">
                   <span className="text-[#0B2545] dark:text-white">Nirikshak</span>
-                  <span className="text-[#16A34A] dark:text-[#22C55E] font-black ml-0.5">-AI</span>
+                  <span className="text-[#16A34A] dark:text-[#22C55E] font-bold ml-0.5">-AI</span>
                 </span>
-                <span className="text-xs font-bold bg-govgreen-50 dark:bg-govgreen-950 text-govgreen-800 dark:text-govgreen-300 border border-govgreen-200/80 dark:border-govgreen-800/80 px-1.5 py-0.5 rounded font-mono">
+                <span className="text-xs font-semibold bg-govgreen-50 dark:bg-govgreen-950 text-govgreen-800 dark:text-govgreen-300 border border-govgreen-200/80 dark:border-govgreen-800/80 px-1.5 py-0.5 rounded">
                   PCR 2011
                 </span>
               </div>
-              <p className="text-xs font-semibold text-institutional-700 dark:text-institutional-300 uppercase tracking-wider mt-0.5">
+              <p className="text-xs font-medium text-institutional-700 dark:text-institutional-300 mt-0.5">
                 {t('brand.fullTitle', 'Legal Metrology Compliance & Inspection Platform')}
               </p>
               <p className="text-[11px] font-medium text-institutional-700 dark:text-institutional-300 mt-0.5">
