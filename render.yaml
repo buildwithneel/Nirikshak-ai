@@ -20,11 +20,11 @@ services:
         value: "false"
       - key: DATABASE_URL
         sync: false
-      - key: SUPABASE_URL
+      - key: FIREBASE_PROJECT_ID
         sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
+      - key: FIREBASE_STORAGE_BUCKET
         sync: false
-      - key: SUPABASE_JWT_SECRET
+      - key: FIREBASE_SERVICE_ACCOUNT_JSON
         sync: false
       - key: CORS_ORIGINS
         sync: false

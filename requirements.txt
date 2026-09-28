@@ -9,12 +9,13 @@ pydantic>=2.0.0
 pydantic-settings>=2.0.0
 python-multipart>=0.0.6
 
-# Database (Supabase PostgreSQL + SQLite dev fallback)
-SQLAlchemy>=2.0.0
+# Database (Cloud PostgreSQL + SQLite dev fallback)
+SQLALCHEMY>=2.0.0
 psycopg2-binary>=2.9.9
 
 # Authentication & Cryptography
 PyJWT>=2.8.0
+cryptography>=41.0.0
 passlib>=1.7.4
 
 # Computer Vision & Real OCR Pipeline
@@ -30,3 +31,4 @@ reportlab>=4.0.0
 # Network & Cloud Storage Client
 requests>=2.31.0
 python-dotenv>=1.0.0
+firebase-admin>=6.5.0

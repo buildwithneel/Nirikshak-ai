@@ -170,15 +170,17 @@ class StorageService:
 
 
 def create_storage_provider() -> BaseStorageProvider:
-    """Factory creating SupabaseStorageProvider if configured, otherwise LocalFileSystemStorageProvider."""
-    supabase_url = os.environ.get("SUPABASE_URL")
-    service_role_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
-    if supabase_url and service_role_key:
+    """Factory creating FirebaseStorageProvider if configured, otherwise LocalFileSystemStorageProvider."""
+    bucket_name = (
+        os.environ.get("FIREBASE_STORAGE_BUCKET")
+        or os.environ.get("VITE_FIREBASE_STORAGE_BUCKET")
+    )
+    if bucket_name:
         try:
-            from .supabase_provider import SupabaseStorageProvider
-            return SupabaseStorageProvider(supabase_url=supabase_url, service_role_key=service_role_key)
+            from .firebase_provider import FirebaseStorageProvider
+            return FirebaseStorageProvider(bucket_name=bucket_name)
         except Exception as e:
-            logger.warning(f"Could not initialize SupabaseStorageProvider: {e}. Using local storage.")
+            logger.warning(f"Could not initialize FirebaseStorageProvider: {e}. Using local storage.")
     return LocalFileSystemStorageProvider()
 
 

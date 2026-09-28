@@ -17,13 +17,19 @@ const mockLocalStorage = {
 // -----------------------------------------------------------
 function detectRoleFromEmail(email) {
   const clean = (email || '').trim().toLowerCase();
-  if (clean.includes('@gmail.com')) {
-    return 'USER'; // Consumer
+  if (!clean || !clean.includes('@')) {
+    return null;
   }
-  if (clean.includes('@officer.com')) {
-    return 'OFFICER';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
+    return null;
   }
-  return null;
+  const officerDomains = ['@officer.com', '@officer.demo', 'gov.in', 'legalmetrology.gov.in'];
+  for (const domain of officerDomains) {
+    if (clean.endsWith(domain) || clean.includes(domain)) {
+      return 'OFFICER';
+    }
+  }
+  return 'USER';
 }
 
 function formatDisplayNameFromEmail(email) {
@@ -77,7 +83,7 @@ function validateDemoCredentials(email, password) {
 
   const detectedRole = detectRoleFromEmail(cleanEmail);
   if (!detectedRole) {
-    return { success: false, error: 'Please use a supported account email.' };
+    return { success: false, error: 'Please enter a valid email address.' };
   }
 
   if (detectedRole === 'OFFICER') {
@@ -119,7 +125,7 @@ function changeUserPassword(email, currentPassword, newPassword, confirmPassword
   const detectedRole = detectRoleFromEmail(cleanEmail);
 
   if (!detectedRole) {
-    return { success: false, message: 'Please use a supported account email.' };
+    return { success: false, message: 'Please enter a valid email address.' };
   }
 
   if (!currentPassword) {
@@ -222,10 +228,12 @@ console.log('========================================================\n');
   assert(resGmail.success && resGmail.role === 'USER', 'TEST 3B: TEST@GMAIL.COM (uppercase) detected as USER');
 }
 
-// TEST 4: Unsupported email domain (@yahoo.com)
+// TEST 4: Civilian Consumer with standard domain (@yahoo.com) and invalid email rejection
 {
   const res = validateDemoCredentials('test@yahoo.com', 'Citizen@2026!');
-  assert(!res.success && res.error === 'Please use a supported account email.', 'TEST 4: test@yahoo.com rejected with "Please use a supported account email."');
+  assert(res.success && res.role === 'USER', 'TEST 4A: Civilian with test@yahoo.com authenticated as USER/Consumer');
+  const resInvalid = validateDemoCredentials('not-an-email', 'Citizen@2026!');
+  assert(!resInvalid.success && resInvalid.error === 'Please enter a valid email address.', 'TEST 4B: Invalid email format rejected with "Please enter a valid email address."');
 }
 
 // TEST 5: Officer wrong password

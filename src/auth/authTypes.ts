@@ -3,6 +3,9 @@ export type UserRole = 'OFFICER' | 'USER' | 'ADMIN' | 'SUPERVISOR' | 'REVIEWER';
 export interface User {
   id: string;
   email: string;
+  phone?: string;
+  phoneNumber?: string;
+  isFirstLogin?: boolean;
   displayName?: string;
   display_name?: string;
   role: UserRole;

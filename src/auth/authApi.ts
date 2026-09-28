@@ -8,6 +8,7 @@ import {
   ComplaintStatus,
 } from './authTypes';
 import { getApiUrl } from '../services/api/config';
+import { getFirebaseIdToken } from '../services/firebase/firebaseClient';
 
 const TOKEN_KEY = 'nirikshak_auth_token';
 const USER_KEY = 'nirikshak_auth_user';
@@ -76,7 +77,12 @@ export const authStorage = {
 import {
   validateDemoCredentials,
   detectRoleFromEmail,
+  formatDisplayNameFromEmail,
   changeUserPassword,
+  isPhoneNumber,
+  normalizePhoneNumber,
+  getMobileUserData,
+  saveMobileUserData,
 } from '../config/demoAccounts';
 
 const DEMO_COMPLAINTS: Complaint[] = [
@@ -116,10 +122,10 @@ export const authApi = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     const cleanEmail = (credentials.email || '').trim().toLowerCase();
     
-    // Check supported account domains (@gmail.com for Consumer, @officer.com for Officer)
+    // Check valid email format
     const detectedRole = detectRoleFromEmail(cleanEmail);
     if (!detectedRole) {
-      throw new Error('Please use a supported account email.');
+      throw new Error('Please enter a valid email address.');
     }
 
     try {
@@ -143,7 +149,7 @@ export const authApi = {
         e.message &&
         (e.message.includes('Invalid email') ||
           e.message.includes('Incorrect email') ||
-          e.message.includes('supported account email'))
+          e.message.includes('valid email address'))
       ) {
         throw e;
       }
@@ -161,6 +167,158 @@ export const authApi = {
     throw new Error(demoResult.error || 'Invalid email or password.');
   },
 
+  async register(data: { email: string; password: string; displayName?: string }): Promise<AuthResponse> {
+    const cleanEmail = (data.email || '').trim().toLowerCase();
+    const detectedRole = detectRoleFromEmail(cleanEmail);
+    if (!detectedRole) {
+      throw new Error('Please enter a valid email address.');
+    }
+
+    try {
+      const res = await fetch(getApiUrl('/api/auth/register'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: cleanEmail,
+          password: data.password,
+          display_name: data.displayName || formatDisplayNameFromEmail(cleanEmail),
+        }),
+      });
+
+      if (res.ok) {
+        const resData = await res.json();
+        authStorage.setSession(resData.access_token, resData.user, true);
+        return resData;
+      }
+    } catch {
+      // Backend offline fallback
+    }
+
+    // Local registration fallback
+    const displayName = data.displayName || formatDisplayNameFromEmail(cleanEmail);
+    const localUser: User = {
+      id: `usr-${detectedRole.toLowerCase()}-${Date.now().toString(36)}`,
+      email: cleanEmail,
+      displayName,
+      role: detectedRole,
+      createdAt: new Date().toISOString(),
+      lastLoginAt: new Date().toISOString(),
+    };
+
+    // Save to locally registered users store
+    if (typeof window !== 'undefined') {
+      try {
+        const storedRaw = localStorage.getItem('nirikshak_registered_users');
+        const list = storedRaw ? JSON.parse(storedRaw) : [];
+        list.push({ email: cleanEmail, password: data.password, user: localUser });
+        localStorage.setItem('nirikshak_registered_users', JSON.stringify(list));
+      } catch (_) {}
+    }
+
+    const mockToken = `local_${detectedRole.toLowerCase()}_token_${Date.now()}`;
+    authStorage.setSession(mockToken, localUser, true);
+    return { access_token: mockToken, token_type: 'bearer', user: localUser };
+  },
+
+  /**
+   * Civilian authentication via mobile phone number.
+   * If first time logging in, returns isFirstLogin: true so UI prompts for name.
+   */
+  async loginWithPhone(
+    phone: string,
+    otp?: string
+  ): Promise<{ user: User; isFirstLogin: boolean; access_token: string }> {
+    const cleanPhone = normalizePhoneNumber(phone);
+    if (!isPhoneNumber(cleanPhone)) {
+      throw new Error('Please enter a valid 10-digit mobile number.');
+    }
+
+    // Try backend endpoint if available
+    try {
+      const res = await fetch(getApiUrl('/api/auth/mobile-login'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone_number: cleanPhone, otp: otp || '123456' }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        authStorage.setSession(data.access_token, data.user, true);
+        return {
+          user: data.user,
+          isFirstLogin: Boolean(data.user.is_first_login || data.is_first_login),
+          access_token: data.access_token,
+        };
+      }
+    } catch {
+      // Offline fallback to local mobile profile store
+    }
+
+    const { displayName, isFirstLogin } = getMobileUserData(cleanPhone);
+    const digits = cleanPhone.replace(/[^\d]/g, '').slice(-10);
+
+    const user: User = {
+      id: `usr-mob-${digits}`,
+      email: `${digits}@citizen.nirikshak.gov`,
+      phone: cleanPhone,
+      phoneNumber: cleanPhone,
+      displayName: displayName || undefined,
+      role: 'USER',
+      createdAt: new Date().toISOString(),
+      lastLoginAt: new Date().toISOString(),
+      isFirstLogin,
+    };
+
+    const token = `mob_token_${digits}_${Date.now()}`;
+    authStorage.setSession(token, user, true);
+
+    return { user, isFirstLogin, access_token: token };
+  },
+
+  /**
+   * Update civilian or user profile (e.g. Setting name on first mobile login).
+   */
+  async updateProfile(updates: { displayName?: string; phone?: string }): Promise<User> {
+    const currentUser = authStorage.getUser();
+    if (!currentUser) {
+      throw new Error('User session not found.');
+    }
+
+    const updatedUser: User = {
+      ...currentUser,
+      displayName: updates.displayName?.trim() || currentUser.displayName,
+      phone: updates.phone || currentUser.phone,
+      phoneNumber: updates.phone || currentUser.phoneNumber,
+      isFirstLogin: false,
+    };
+
+    // If mobile number exists, persist in local mobile users registry
+    if (updatedUser.phone && updates.displayName) {
+      saveMobileUserData(updatedUser.phone, updates.displayName);
+    }
+
+    // Attempt backend sync
+    try {
+      const token = authStorage.getToken();
+      if (token && !token.startsWith('demo_') && !token.startsWith('local_') && !token.startsWith('mob_')) {
+        await fetch(getApiUrl('/api/auth/profile'), {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            display_name: updates.displayName,
+            phone_number: updates.phone,
+          }),
+        });
+      }
+    } catch (_) {}
+
+    const token = authStorage.getToken() || `token_${Date.now()}`;
+    authStorage.setSession(token, updatedUser, true);
+    return updatedUser;
+  },
+
   changePassword(
     currentPass: string,
     newPass: string,
@@ -174,7 +332,9 @@ export const authApi = {
   },
 
   async logout(): Promise<void> {
-    const token = authStorage.getToken();
+    // Prefer a fresh Firebase ID token; fall back to stored token (demo sessions).
+    const freshToken = await getFirebaseIdToken();
+    const token = freshToken || authStorage.getToken();
     if (token) {
       try {
         await fetch(getApiUrl('/api/auth/logout'), {
@@ -189,8 +349,15 @@ export const authApi = {
   },
 
   async getMe(): Promise<User | null> {
-    const token = authStorage.getToken();
+    // Always prefer a fresh Firebase ID token so we never send an expired JWT.
+    const freshToken = await getFirebaseIdToken();
+    const token = freshToken || authStorage.getToken();
     if (!token) return null;
+
+    // Keep stored token up to date if Firebase issued a fresh one.
+    if (freshToken && freshToken !== authStorage.getToken()) {
+      authStorage.setToken(freshToken);
+    }
 
     try {
       const res = await fetch(getApiUrl('/api/auth/me'), {
@@ -200,14 +367,14 @@ export const authApi = {
         return await res.json();
       }
       if (res.status === 401) {
-        // If token was a demo token, maintain local session
+        // Demo tokens are not validated by the backend — preserve local session.
         if (token.startsWith('demo_')) {
           return authStorage.getUser();
         }
         return null;
       }
     } catch {
-      // Fallback to local cached user when offline
+      // Offline — fall back to cached user.
       return authStorage.getUser();
     }
     return authStorage.getUser();

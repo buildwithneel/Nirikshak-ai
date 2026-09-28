@@ -16,8 +16,8 @@ def get_current_user(
 ) -> UserDB:
     """
     Validates JWT Bearer token and returns authenticated UserDB record from database.
-    Supports both internal tokens and Supabase Auth tokens.
-    Automatically onboards new Supabase OAuth users with default USER (consumer) role.
+    Supports both internal tokens and Firebase Auth tokens.
+    Automatically onboards new Firebase OAuth users with default USER (consumer) role.
     Raises 401 Unauthorized on invalid/expired credentials.
     """
     if not authorization or not authorization.startswith("Bearer "):
@@ -44,8 +44,8 @@ def get_current_user(
     if not user and email:
         user = db.query(UserDB).filter(UserDB.email == email, UserDB.active == True).first()
 
-    # If still not found and authenticated via Supabase, create user profile with USER role
-    if not user and (payload.get("is_supabase") or email):
+    # If still not found and authenticated via Firebase, create user profile with USER role
+    if not user and (payload.get("is_firebase") or email):
         if not email:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

@@ -25,6 +25,8 @@ class ComplaintStatus(str, Enum):
 class UserBase(BaseModel):
     email: str
     display_name: str
+    phone_number: Optional[str] = None
+    is_first_login: Optional[bool] = None
     role: UserRole = UserRole.USER
     active: bool = True
     jurisdiction: Optional[str] = None
@@ -53,6 +55,16 @@ class UserLogin(BaseModel):
     email: str
     password: str
     remember_me: Optional[bool] = False
+
+
+class MobileLoginRequest(BaseModel):
+    phone_number: str
+    otp: Optional[str] = "123456"
+
+
+class ProfileUpdate(BaseModel):
+    display_name: Optional[str] = None
+    phone_number: Optional[str] = None
 
 
 class TokenResponse(BaseModel):

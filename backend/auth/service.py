@@ -1,3 +1,4 @@
+import re
 import uuid
 import threading
 from datetime import datetime, timezone
@@ -58,6 +59,25 @@ class AuthService:
         )
         self._users[officer_email] = officer_user
         self._users_by_id[officer_user.id] = officer_user
+
+        # 1B. Gov.com Inspection Officer / Administration
+        gov_email = normalize_email("officer@gov.com")
+        gov_hash, gov_salt = hash_password("officer2026")
+        gov_user = UserInDB(
+            id="usr-officer-gov-001",
+            email=gov_email,
+            display_name="Gov Metrology Officer",
+            role=UserRole.OFFICER,
+            active=True,
+            jurisdiction="State Enforcement Directorate, Zone 1",
+            cadre_code="LM-GOV-2026-001",
+            created_at=datetime.now(timezone.utc).isoformat(),
+            last_login_at=datetime.now(timezone.utc).isoformat(),
+            hashed_password=gov_hash,
+            salt=gov_salt,
+        )
+        self._users[gov_email] = gov_user
+        self._users_by_id[gov_user.id] = gov_user
 
         # 2. Citizen / Consumer
         citizen_email = normalize_email("citizen@gmail.com")
@@ -220,14 +240,113 @@ class AuthService:
                 return User(**u.model_dump())
             return None
 
-    def get_user_by_email(self, email: str) -> Optional[User]:
-        """Fetch user by email."""
+    def map_user_id(self, external_id: str, email: str) -> None:
+        """Map an external provider ID (e.g. Firebase UID) to an existing user record."""
         clean_email = normalize_email(email)
         with self._lock:
-            u = self._users.get(clean_email)
-            if u and u.active:
-                return User(**u.model_dump())
-            return None
+            existing = self._users.get(clean_email)
+            if existing:
+                self._users_by_id[external_id] = existing
+
+    def provision_oauth_user(
+        self, user_id: str, email: str, display_name: Optional[str] = None
+    ) -> User:
+        """Provision or retrieve an external OAuth (Firebase / Google) user."""
+        clean_email = normalize_email(email)
+        with self._lock:
+            if clean_email in self._users:
+                existing = self._users[clean_email]
+                self._users_by_id[user_id] = existing
+                return User(**existing.model_dump())
+
+            server_role = determine_role_from_email(clean_email)
+            now = datetime.now(timezone.utc).isoformat()
+            name = display_name or clean_email.split("@")[0].capitalize()
+            new_user = UserInDB(
+                id=user_id,
+                email=clean_email,
+                display_name=name,
+                role=server_role,
+                active=True,
+                jurisdiction="Enforcement Area" if server_role == UserRole.OFFICER else None,
+                cadre_code=f"LM-{uuid.uuid4().hex[:6].upper()}" if server_role == UserRole.OFFICER else None,
+                created_at=now,
+                last_login_at=now,
+                hashed_password="OAUTH_EXTERNAL_FIREBASE",
+                salt="OAUTH",
+            )
+            self._users[clean_email] = new_user
+            self._users_by_id[user_id] = new_user
+            self.log_audit(
+                actor_user_id=new_user.id,
+                actor_email=new_user.email,
+                action="OAUTH_USER_ONBOARD",
+                entity_type="USER",
+                entity_id=new_user.id,
+                details={"role": server_role.value, "provider": "firebase"},
+            )
+            return User(**new_user.model_dump())
+
+    def update_user_profile(
+        self, user_id: str, display_name: Optional[str] = None, phone_number: Optional[str] = None
+    ) -> Optional[User]:
+        """Update civilian user display name and/or phone number."""
+        with self._lock:
+            user = self._users_by_id.get(user_id)
+            if not user:
+                return None
+            if display_name:
+                user.display_name = display_name.strip()
+            if phone_number:
+                user.phone_number = phone_number.strip()
+            user.is_first_login = False
+            return User(**user.model_dump())
+
+    def authenticate_mobile_user(self, phone_number: str) -> tuple[User, bool]:
+        """
+        Authenticate or provision a civilian user via their mobile phone number.
+        Returns (user, is_first_login).
+        """
+        clean_phone = re.sub(r"[^\d\+]", "", phone_number.strip())
+        digits = re.sub(r"[^\d]", "", clean_phone)[-10:]
+        email_alias = f"{digits}@citizen.nirikshak.gov"
+
+        with self._lock:
+            if email_alias in self._users:
+                existing = self._users[email_alias]
+                existing.last_login_at = datetime.now(timezone.utc).isoformat()
+                is_first = bool(existing.is_first_login or not existing.display_name or existing.display_name.startswith("Citizen "))
+                return User(**existing.model_dump()), is_first
+
+            user_id = f"usr-mob-{digits}"
+            now = datetime.now(timezone.utc).isoformat()
+            new_user = UserInDB(
+                id=user_id,
+                email=email_alias,
+                display_name=f"Citizen {digits[-4:]}",
+                phone_number=clean_phone,
+                role=UserRole.USER,
+                active=True,
+                jurisdiction=None,
+                cadre_code=None,
+                created_at=now,
+                last_login_at=now,
+                hashed_password="MOBILE_OTP_USER",
+                salt="MOBILE",
+                is_first_login=True,
+            )
+            self._users[email_alias] = new_user
+            self._users_by_id[user_id] = new_user
+
+            self.log_audit(
+                actor_user_id=new_user.id,
+                actor_email=new_user.email,
+                action="MOBILE_USER_LOGIN",
+                entity_type="USER",
+                entity_id=new_user.id,
+                details={"phone": clean_phone},
+            )
+            return User(**new_user.model_dump()), True
 
     # --- Complaint Operations with Strict Role-Based Data Boundary ---
 

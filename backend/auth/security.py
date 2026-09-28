@@ -19,8 +19,8 @@ PBKDF2_ITERATIONS = int(os.environ.get("PBKDF2_ITERATIONS", "100000"))
 PBKDF2_SALT_LENGTH = int(os.environ.get("PBKDF2_SALT_LENGTH", "16"))
 
 # Officer domain configuration (configurable via environment)
-# In development/demo, default to 'officer.demo,gov.in,legalmetrology.gov.in'
-DEFAULT_OFFICER_DOMAINS = "officer.demo,gov.in,legalmetrology.gov.in"
+# In development/demo, default to 'officer.demo,officer.com,gov.com,gov.in,legalmetrology.gov.in'
+DEFAULT_OFFICER_DOMAINS = "officer.demo,officer.com,gov.com,gov.in,legalmetrology.gov.in"
 OFFICER_EMAIL_DOMAINS_ENV = os.environ.get("OFFICER_EMAIL_DOMAINS", DEFAULT_OFFICER_DOMAINS)
 
 
@@ -108,57 +108,151 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
     return encoded_jwt
 
 
-# Supabase configuration for JWT verification
-SUPABASE_JWT_SECRET = os.environ.get("SUPABASE_JWT_SECRET")
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "").rstrip("/")
-SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+# Firebase Authentication configuration for ID token verification
+FIREBASE_PROJECT_ID = (
+    os.environ.get("FIREBASE_PROJECT_ID")
+    or os.environ.get("VITE_FIREBASE_PROJECT_ID", "")
+).strip()
 
-# Simple in-memory token cache for verified Supabase user tokens (avoids repeated API roundtrips)
-_SUPABASE_TOKEN_CACHE: Dict[str, Dict[str, Any]] = {}
+# In-memory caches for Google x509 certs and verified Firebase tokens
+_GOOGLE_CERTS_CACHE: Dict[str, str] = {}
+_GOOGLE_CERTS_LAST_FETCH: float = 0.0
+_FIREBASE_TOKEN_CACHE: Dict[str, Dict[str, Any]] = {}
+GOOGLE_CERTS_URL = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com"
 
 
-def verify_supabase_token_via_api(token: str) -> Optional[Dict[str, Any]]:
-    """Verifies token against Supabase Auth API /auth/v1/user endpoint."""
-    if not SUPABASE_URL:
-        return None
+def _get_google_public_certs() -> Dict[str, str]:
+    """Fetches and caches Google's public x509 certificates for Firebase ID token verification."""
+    global _GOOGLE_CERTS_CACHE, _GOOGLE_CERTS_LAST_FETCH
+    import time
+    import requests
 
-    if token in _SUPABASE_TOKEN_CACHE:
-        return _SUPABASE_TOKEN_CACHE[token]
+    now = time.time()
+    # Cache certificates for up to 1 hour (3600 seconds)
+    if _GOOGLE_CERTS_CACHE and (now - _GOOGLE_CERTS_LAST_FETCH < 3600):
+        return _GOOGLE_CERTS_CACHE
 
     try:
-        import requests
-        headers = {
-            "Authorization": f"Bearer {token}",
-            "apikey": SUPABASE_SERVICE_ROLE_KEY or os.environ.get("SUPABASE_PUBLISHABLE_KEY", ""),
-        }
-        res = requests.get(f"{SUPABASE_URL}/auth/v1/user", headers=headers, timeout=5)
+        res = requests.get(GOOGLE_CERTS_URL, timeout=5)
         if res.status_code == 200:
-            user_data = res.json()
-            payload = {
-                "sub": user_data.get("id"),
-                "email": user_data.get("email"),
-                "user_metadata": user_data.get("user_metadata", {}),
-                "app_metadata": user_data.get("app_metadata", {}),
-                "is_supabase": True,
-            }
-            # Cache valid token for 5 minutes
-            if len(_SUPABASE_TOKEN_CACHE) > 500:
-                _SUPABASE_TOKEN_CACHE.clear()
-            _SUPABASE_TOKEN_CACHE[token] = payload
-            return payload
+            _GOOGLE_CERTS_CACHE = res.json()
+            _GOOGLE_CERTS_LAST_FETCH = now
+            return _GOOGLE_CERTS_CACHE
     except Exception:
         pass
-    return None
+    return _GOOGLE_CERTS_CACHE
+
+
+def verify_firebase_token(token: str) -> Optional[Dict[str, Any]]:
+    """
+    Verifies a Firebase ID token.
+    Supports:
+    1. Firebase Admin SDK if initialized.
+    2. Direct RS256 cryptographic verification using Google's public x509 certificates.
+    Returns normalized payload with 'sub', 'email', 'user_metadata', and 'is_firebase': True.
+    """
+    if not token or len(token) < 20:
+        return None
+
+    import time
+    if token in _FIREBASE_TOKEN_CACHE:
+        cached = _FIREBASE_TOKEN_CACHE[token]
+        exp = cached.get("exp", 0)
+        if exp > time.time():
+            return cached
+        else:
+            del _FIREBASE_TOKEN_CACHE[token]
+
+    # 1. Attempt Admin SDK if available
+    try:
+        import firebase_admin
+        from firebase_admin import auth as fb_auth
+
+        firebase_admin.get_app()
+        decoded = fb_auth.verify_id_token(token)
+        payload = {
+            "sub": decoded.get("uid") or decoded.get("sub"),
+            "email": decoded.get("email"),
+            "user_metadata": {
+                "full_name": decoded.get("name"),
+                "avatar_url": decoded.get("picture"),
+            },
+            "exp": decoded.get("exp"),
+            "is_firebase": True,
+        }
+        if len(_FIREBASE_TOKEN_CACHE) > 500:
+            _FIREBASE_TOKEN_CACHE.clear()
+        _FIREBASE_TOKEN_CACHE[token] = payload
+        return payload
+    except Exception:
+        pass
+
+    # 2. Standalone verification using Google's public certificates & PyJWT
+    try:
+        unverified_header = jwt.get_unverified_header(token)
+        if unverified_header.get("alg") != "RS256":
+            return None
+
+        kid = unverified_header.get("kid")
+        if not kid:
+            return None
+
+        certs = _get_google_public_certs()
+        if kid not in certs:
+            global _GOOGLE_CERTS_LAST_FETCH
+            _GOOGLE_CERTS_LAST_FETCH = 0.0
+            certs = _get_google_public_certs()
+
+        cert_pem = certs.get(kid)
+        if not cert_pem:
+            return None
+
+        options = {"verify_signature": True}
+        decode_kwargs: Dict[str, Any] = {
+            "algorithms": ["RS256"],
+            "options": options,
+        }
+
+        if FIREBASE_PROJECT_ID:
+            decode_kwargs["audience"] = FIREBASE_PROJECT_ID
+            decode_kwargs["issuer"] = f"https://securetoken.google.com/{FIREBASE_PROJECT_ID}"
+        else:
+            options["verify_aud"] = False
+            options["verify_iss"] = False
+
+        decoded = jwt.decode(token, cert_pem, **decode_kwargs)
+
+        iss = decoded.get("iss", "")
+        if not iss.startswith("https://securetoken.google.com/"):
+            return None
+
+        payload = {
+            "sub": decoded.get("user_id") or decoded.get("sub"),
+            "email": decoded.get("email"),
+            "user_metadata": {
+                "full_name": decoded.get("name"),
+                "avatar_url": decoded.get("picture"),
+            },
+            "exp": decoded.get("exp"),
+            "is_firebase": True,
+        }
+
+        if len(_FIREBASE_TOKEN_CACHE) > 500:
+            _FIREBASE_TOKEN_CACHE.clear()
+        _FIREBASE_TOKEN_CACHE[token] = payload
+        return payload
+    except Exception:
+        return None
 
 
 def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
     """
-    Decodes and validates a signed JWT access token.
-    Supports both:
+    Decodes and validates an access token.
+    Supports:
     1. Internal/Local JWT tokens (signed with SECRET_KEY)
-    2. Supabase Auth JWT tokens (signed with SUPABASE_JWT_SECRET or verified via Supabase Auth API)
+    2. Firebase Auth ID tokens (verified against Google's public certificates / Firebase Admin)
     """
-    # 1. Try local SECRET_KEY first (standard internal auth & dev test suites)
+    # 1. Try local SECRET_KEY first (standard internal auth & demo sessions)
     try:
         try:
             return jwt.decode(
@@ -178,24 +272,9 @@ def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
     except Exception:
         pass
 
-    # 2. Try Supabase JWT Secret if configured
-    if SUPABASE_JWT_SECRET:
-        try:
-            payload = jwt.decode(
-                token,
-                SUPABASE_JWT_SECRET,
-                algorithms=["HS256"],
-                options={"verify_aud": False, "verify_iss": False},
-            )
-            payload["is_supabase"] = True
-            return payload
-        except Exception:
-            pass
-
-    # 3. Try Supabase Auth API verification if SUPABASE_URL configured
-    if SUPABASE_URL:
-        supabase_payload = verify_supabase_token_via_api(token)
-        if supabase_payload:
-            return supabase_payload
+    # 2. Try Firebase ID token verification
+    firebase_payload = verify_firebase_token(token)
+    if firebase_payload:
+        return firebase_payload
 
     return None

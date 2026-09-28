@@ -5,6 +5,8 @@ from .models import (
     User,
     UserCreate,
     UserLogin,
+    MobileLoginRequest,
+    ProfileUpdate,
     TokenResponse,
     Complaint,
     ComplaintCreate,
@@ -40,8 +42,27 @@ def get_current_user(authorization: Optional[str] = Header(None)) -> User:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    user_id = payload["sub"]
+    user_id = str(payload["sub"])
     user = auth_service.get_user_by_id(user_id)
+    if not user:
+        email = payload.get("email")
+        if email:
+            user = auth_service.get_user_by_email(email)
+            if user:
+                auth_service.map_user_id(user_id, email)
+        
+        # Auto-provision Firebase OAuth user if valid token
+        if not user and (payload.get("is_firebase") or email):
+            user_meta = payload.get("user_metadata", {})
+            display_name = (
+                user_meta.get("full_name")
+                or user_meta.get("name")
+                or (email.split("@")[0].capitalize() if email else "Citizen User")
+            )
+            user = auth_service.provision_oauth_user(
+                user_id=user_id, email=email or f"{user_id}@firebase.user", display_name=display_name
+            )
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -120,6 +141,47 @@ async def logout(current_user: User = Depends(get_current_user)):
 async def get_current_user_profile(current_user: User = Depends(get_current_user)):
     """Fetch profile of currently authenticated user."""
     return current_user
+
+
+@auth_router.post("/mobile-login", response_model=TokenResponse)
+async def mobile_login(payload: MobileLoginRequest):
+    """
+    Civilian mobile phone authentication.
+    Returns JWT token and user profile with is_first_login flag.
+    """
+    if not payload.phone_number:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Mobile phone number is required.",
+        )
+
+    user, is_first_login = auth_service.authenticate_mobile_user(payload.phone_number)
+    token = create_access_token(
+        data={"sub": user.id, "email": user.email, "role": user.role.value}
+    )
+    logger.info(f"Mobile login for {user.phone_number} (first_login={is_first_login})")
+    return TokenResponse(access_token=token, token_type="bearer", user=user)
+
+
+@auth_router.patch("/profile", response_model=User)
+async def update_profile(
+    payload: ProfileUpdate, current_user: User = Depends(get_current_user)
+):
+    """
+    Update authenticated user's display name or contact phone.
+    """
+    updated = auth_service.update_user_profile(
+        user_id=current_user.id,
+        display_name=payload.display_name,
+        phone_number=payload.phone_number,
+    )
+    if not updated:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found.",
+        )
+    logger.info(f"Profile updated for {current_user.email} -> name: {updated.display_name}")
+    return updated
 
 
 # --- Complaint Endpoints ---

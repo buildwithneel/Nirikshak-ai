@@ -1,6 +1,6 @@
 # NIRIKSHAK AI — Production Deployment Manual
 
-## Final Milestone Deployment Architecture: GitHub + Supabase + Google OAuth + Render + Vercel
+## Final Milestone Deployment Architecture: GitHub + Firebase + Cloud PostgreSQL + Render + Vercel
 
 
                          CITIZEN / ENFORCEMENT OFFICER
@@ -14,14 +14,14 @@
                     ┌──────────────────┴──────────────────┐
                     ▼                                     ▼
          ┌─────────────────────┐               ┌────────────────────┐
-         │    Supabase Auth    │               │  Render Web Service│
+         │    Firebase Auth    │               │  Render Web Service│
          │          │          │               │  FastAPI / RapidOCR│
-         │    Google OAuth     │               └──────────┬─────────┘
+         │    Google Sign-In   │               └──────────┬─────────┘
          └─────────────────────┘                          │
                                         ┌─────────────────┼─────────────────┐
                                         ▼                 ▼                 ▼
-                                  Supabase DB      Supabase Storage      PaddleOCR
-                                   PostgreSQL        Images & PDFs      ONNX Engine
+                                  PostgreSQL DB    Firebase Storage      PaddleOCR
+                                   Cloud SQL         Images & PDFs      ONNX Engine
 
 
 ## 1. Environment Variable Reference Matrix
@@ -30,22 +30,23 @@
 | :--- | :--- | :--- | :---: | :--- |
 | `ENVIRONMENT` | Operational mode (`production`, `development`) | Render | Yes | Server Config |
 | `PORT` | Dynamic listening port assigned by hosting platform | Render | Auto | Server Config |
-| `DATABASE_URL` | PostgreSQL connection URI for Supabase | Render | Yes | **Backend Secret** |
+| `DATABASE_URL` | PostgreSQL connection URI for Cloud Database | Render | Yes | **Backend Secret** |
 | `SEED_DEMO_DATA` | Prevent automatic demo seeding in production (`false`) | Render | Yes | Server Config |
-| `SUPABASE_URL` | Supabase project API gateway endpoint | Render | Yes | Backend Config |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server-side key for storage & auth admin ops | Render | Yes | **Critical Secret** |
-| `SUPABASE_JWT_SECRET` | Secret to decode and verify Supabase Auth JWTs | Render | Yes | **Backend Secret** |
-| `SUPABASE_BUCKET_INSPECTIONS`| Private bucket name (`inspection-images`) | Render | Yes | Server Config |
-| `SUPABASE_BUCKET_COMPLAINTS` | Private bucket name (`complaint-images`) | Render | Yes | Server Config |
-| `SUPABASE_BUCKET_REPORTS` | Private bucket name (`reports`) | Render | Yes | Server Config |
+| `FIREBASE_PROJECT_ID` | Firebase Project ID for backend ID token verification | Render | Yes | Backend Config |
+| `FIREBASE_STORAGE_BUCKET`| Firebase Cloud Storage bucket name | Render | Yes | Server Config |
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | Single-line JSON or path to GCP service account | Render | Optional | **Critical Secret** |
 | `CORS_ORIGINS` | Comma-separated allowed frontend origins | Render | Yes | Server Config |
 | `JWT_SECRET_KEY` | Fallback internal JWT signing key | Render | Yes | **Backend Secret** |
 | `VITE_API_BASE_URL` | Render Web Service URL (e.g. `https://nirikshak-api.onrender.com`) | Vercel | Yes | **Frontend Public** |
-| `VITE_SUPABASE_URL` | Supabase project URL for browser client | Vercel | Yes | **Frontend Public** |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Supabase Anon/Publishable API key | Vercel | Yes | **Frontend Public** |
+| `VITE_FIREBASE_API_KEY` | Firebase Web API Key | Vercel | Yes | **Frontend Public** |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Firebase Auth Domain (`<project-id>.firebaseapp.com`) | Vercel | Yes | **Frontend Public** |
+| `VITE_FIREBASE_PROJECT_ID` | Firebase Project ID | Vercel | Yes | **Frontend Public** |
+| `VITE_FIREBASE_STORAGE_BUCKET` | Firebase Storage Bucket | Vercel | Yes | **Frontend Public** |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Firebase Messaging Sender ID | Vercel | Yes | **Frontend Public** |
+| `VITE_FIREBASE_APP_ID` | Firebase Web App ID | Vercel | Yes | **Frontend Public** |
 
 > [!CAUTION]
-> Never expose `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, or `GOOGLE_CLIENT_SECRET` in Vercel frontend environment variables or client-side bundles.
+> Never expose `FIREBASE_SERVICE_ACCOUNT_JSON`, `DATABASE_URL`, or `JWT_SECRET_KEY` in Vercel frontend environment variables or client-side bundles.
 
 ---
 
@@ -62,42 +63,40 @@
    ```bash
    git remote add origin https://github.com/buildwithneel/Nirikshak-ai.git
    git push -u origin main
+   ```
 
-### Phase 2: Supabase Setup (PostgreSQL + Auth + Storage)
-1. **Create Supabase Project**:
-   - Go to [Supabase Dashboard](https://app.supabase.com) -> **New Project**.
-   - Note down:
-     - Project URL (`https://<project-ref>.supabase.co`)
-     - Anon/Publishable Key
-     - Service Role Secret Key (Settings -> API)
-     - Database connection string (`postgresql://postgres:[PASSWORD]@db.<project-ref>.supabase.co:5432/postgres`)
-     - JWT Secret (Settings -> API -> JWT Settings)
+### Phase 2: Firebase Setup (Auth + Storage)
+1. **Create Firebase Project**:
+   - Go to [Firebase Console](https://console.firebase.google.com/) -> **Add Project**.
+   - Create or select your Google Cloud project.
 
-2. **Configure Storage Buckets**:
-   - Navigate to **Storage** -> **Create new bucket**:
-     - `inspection-images`: **Private** (Officer surveillance evidence)
-     - `complaint-images`: **Private** (Consumer grievance uploads)
-     - `reports`: **Private** (Official statutory inspection PDF reports)
+2. **Enable Authentication**:
+   - Navigate to **Authentication** -> **Sign-in method**.
+   - Enable **Email/Password**.
+   - Enable **Google** provider (select support email and save).
 
-3. **Configure Google OAuth in Supabase**:
-   - Navigate to **Authentication** -> **Providers** -> **Google**.
-   - Toggle **Enable Google**.
-   - Copy the **Authorized Redirect URI** provided by Supabase:
-     ```text
-     https://<project-ref>.supabase.co/auth/v1/callback
-     ```
+3. **Enable Cloud Storage**:
+   - Navigate to **Storage** -> **Get Started**.
+   - Create your default storage bucket.
+   - Note down the bucket name (e.g., `<project-id>.firebasestorage.app` or `<project-id>.appspot.com`).
+
+4. **Register Web App**:
+   - Go to **Project Settings** -> **General** -> **Your apps** -> **Add app** (Web `</>`).
+   - Copy the `firebaseConfig` object values:
+     - `apiKey`, `authDomain`, `projectId`, `storageBucket`, `messagingSenderId`, `appId`.
+
+5. **(Optional) Service Account for Backend Storage**:
+   - Navigate to **Project Settings** -> **Service accounts** -> **Generate new private key**.
+   - Store the JSON content in `FIREBASE_SERVICE_ACCOUNT_JSON` in Render.
 
 ---
 
-### Phase 3: Google Cloud Platform OAuth Credentials
-1. Go to [Google Cloud Console](https://console.cloud.google.com/) -> **APIs & Services** -> **Credentials**.
-2. Create **OAuth 2.0 Client ID** -> Application type: **Web application**.
-3. Under **Authorized JavaScript origins**, add:
-   - `http://localhost:5173` (Development)
-   - `https://nirikshak-ai.vercel.app` (Your production Vercel domain)
-4. Under **Authorized redirect URIs**, add:
-   - `https://<project-ref>.supabase.co/auth/v1/callback` (Copied from Supabase)
-5. Copy **Client ID** and **Client Secret** into Supabase Dashboard -> Google Provider settings.
+### Phase 3: Cloud PostgreSQL Database
+1. Set up a PostgreSQL 15+ database (e.g. Neon, Supabase PostgreSQL, AWS RDS, or Render PostgreSQL).
+2. Obtain connection string:
+   ```text
+   postgresql://postgres:[PASSWORD]@[HOST]:5432/[DB-NAME]
+   ```
 
 ---
 
@@ -113,10 +112,10 @@
 4. Set Environment Variables in Render:
    - `ENVIRONMENT` = `production`
    - `SEED_DEMO_DATA` = `false`
-   - `DATABASE_URL` = `postgresql://postgres:[PASSWORD]@db.<project-ref>.supabase.co:5432/postgres`
-   - `SUPABASE_URL` = `https://<project-ref>.supabase.co`
-   - `SUPABASE_SERVICE_ROLE_KEY` = `<your-service-role-key>`
-   - `SUPABASE_JWT_SECRET` = `<your-jwt-secret>`
+   - `DATABASE_URL` = `postgresql://postgres:[PASSWORD]@[HOST]:5432/[DB-NAME]`
+   - `FIREBASE_PROJECT_ID` = `<your-firebase-project-id>`
+   - `FIREBASE_STORAGE_BUCKET` = `<your-firebase-storage-bucket>`
+   - `FIREBASE_SERVICE_ACCOUNT_JSON` = `<single-line-service-account-json>` (optional)
    - `CORS_ORIGINS` = `https://nirikshak-ai.vercel.app,http://localhost:5173`
 5. Deploy Web Service. Note down the assigned URL:
    ```text
@@ -131,8 +130,12 @@
 3. Select **Vite** framework preset.
 4. Set Environment Variables:
    - `VITE_API_BASE_URL` = `https://nirikshak-ai-backend.onrender.com`
-   - `VITE_SUPABASE_URL` = `https://<project-ref>.supabase.co`
-   - `VITE_SUPABASE_PUBLISHABLE_KEY` = `<your-anon-publishable-key>`
+   - `VITE_FIREBASE_API_KEY` = `<your-api-key>`
+   - `VITE_FIREBASE_AUTH_DOMAIN` = `<your-auth-domain>`
+   - `VITE_FIREBASE_PROJECT_ID` = `<your-project-id>`
+   - `VITE_FIREBASE_STORAGE_BUCKET` = `<your-storage-bucket>`
+   - `VITE_FIREBASE_MESSAGING_SENDER_ID` = `<your-messaging-sender-id>`
+   - `VITE_FIREBASE_APP_ID` = `<your-app-id>`
 5. Deploy. Vercel will build the bundle using `npm run build` and deploy to `https://nirikshak-ai.vercel.app`.
 
 ---

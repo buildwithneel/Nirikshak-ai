@@ -12,7 +12,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { getApiUrl } from '../../services/api/config';
-import { isSupabaseConfigured } from '../../services/supabase/supabaseClient';
+import { isFirebaseConfigured } from '../../services/firebase/firebaseClient';
 
 interface SystemDiagnostics {
   status: string;
@@ -62,7 +62,7 @@ export const SystemStatusModal: React.FC<{ isOpen: boolean; onClose: () => void 
   if (!isOpen) return null;
 
   const envMode = import.meta.env.PROD ? 'Production' : 'Development';
-  const supabaseActive = isSupabaseConfigured();
+  const firebaseActive = isFirebaseConfigured();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
@@ -107,7 +107,7 @@ export const SystemStatusModal: React.FC<{ isOpen: boolean; onClose: () => void 
               </span>
               <span className="font-bold text-govink-primary text-sm flex items-center gap-1.5">
                 <ShieldCheck className="w-4 h-4 text-govgreen-700" />
-                {supabaseActive ? 'Supabase Auth / Google OAuth' : 'Dual-Mode / Local Auth'}
+                {firebaseActive ? 'Firebase Auth / Google OAuth' : 'Dual-Mode / Local Auth'}
               </span>
             </div>
           </div>

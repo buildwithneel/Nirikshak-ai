@@ -16,7 +16,7 @@ NIRIKSHAK AI is an enterprise-grade, evidence-grounded regulatory technology pla
 6. **Tamper-Evident Audit Trail**: Cryptographic SHA-256 hash chaining of all inspection and grievance lifecycle events with verification endpoints.
 7. **Statutory PDF Report Generation**: Official inspection dossier with embedded evidence snapshots, officer findings, and cryptographic SHA-256 provenance.
 8. **Field Network Resilience & Offline Sync**: Full offline capability with IndexedDB draft storage, connection status indicators, and automatic reconnection synchronization.
-9. **Production Cloud Architecture**: GitHub + Supabase (PostgreSQL, Auth, Storage, Google OAuth) + Render (FastAPI) + Vercel (React/Vite).
+9. **Production Cloud Architecture**: GitHub + Firebase (Authentication & Cloud Storage) + Cloud PostgreSQL + Render (FastAPI) + Vercel (React/Vite).
 
 ---
 
@@ -58,7 +58,7 @@ Visual non-detection is labeled `NOT_DETECTED` / "No Reliable Visual Evidence De
              ┌─────────────┴─────────────┐
              │                           │
              ▼                           ▼
-      Supabase Auth                Render API
+      Firebase Auth                 Render API
              │                           │
              ▼                           ▼
        Google OAuth                FastAPI Backend
@@ -66,8 +66,8 @@ Visual non-detection is labeled `NOT_DETECTED` / "No Reliable Visual Evidence De
                        ┌─────────────────┼─────────────────┐
                        │                 │                 │
                        ▼                 ▼                 ▼
-                 Supabase DB       Supabase Storage    OCR/AI
-                  PostgreSQL         Images/PDFs       Processing
+                 PostgreSQL DB    Firebase Storage      OCR/AI
+                  Relational         Images/PDFs       Processing
 ```
 
 For complete step-by-step instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).

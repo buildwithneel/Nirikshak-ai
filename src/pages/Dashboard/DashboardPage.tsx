@@ -30,6 +30,14 @@ import {
 import { useLanguage } from '../../i18n/LanguageContext';
 import { dashboardApi } from '../../services/api/dashboardApi';
 
+const getTimeBasedGreeting = (): string => {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return 'Good morning';
+  if (hour >= 12 && hour < 17) return 'Good afternoon';
+  if (hour >= 17 && hour < 21) return 'Good evening';
+  return 'Good night';
+};
+
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -81,7 +89,7 @@ export const DashboardPage: React.FC = () => {
             <span>OFFICER COMMAND CENTER • CURRENT WORKLOAD</span>
           </div>
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-institutional-900 dark:text-white tracking-tight mt-1 font-display">
-            Good afternoon, Officer Portal
+            {getTimeBasedGreeting()}, Officer Portal
           </h1>
           <p className="text-xs sm:text-sm text-institutional-600 dark:text-institutional-400 mt-1">
             Active statutory surveillance, prioritized work queue, and cross-panel enforcement intelligence.
